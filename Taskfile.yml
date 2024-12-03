@@ -13,8 +13,8 @@ vars:
 
   DEV_TOOLS: |
     github.com/daixiang0/gci@v0.13.5
+    github.com/kazhuravlev/options-gen/cmd/options-gen@v0.33.1
     mvdan.cc/gofumpt@v0.7.0
-    github.com/kazhuravlev/options-gen@v0.33.1
 
 tasks:
   default:
@@ -68,7 +68,8 @@ tasks:
     cmds:
       - echo "- Install dev tools"
       - |
-        {{- range $tool := splitList " " .DEV_TOOLS }}
+        {{- range $tool := splitList "\n" .DEV_TOOLS | compact}}
+        echo "{{ $tool }}"
         go install {{ $tool }}
         {{- end }}
   generate:

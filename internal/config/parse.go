@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/Slava02/ChatSupport/internal/validator"
-	"github.com/pelletier/go-toml"
 	"io"
 	"os"
+
+	"github.com/pelletier/go-toml"
+
+	"github.com/Slava02/ChatSupport/internal/validator"
 )
 
 func ParseAndValidate(filename string) (Config, error) {
