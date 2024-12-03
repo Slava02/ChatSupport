@@ -141,6 +141,7 @@ linters:
     - ineffassign
     - inamedparam
     - lll
+    - loggercheck
     - makezero
     - misspell
     - musttag
@@ -176,3 +177,4 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
+
