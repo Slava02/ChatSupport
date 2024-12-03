@@ -18,61 +18,58 @@ vars:
 tasks:
   default:
     cmds:
-    - task: tidy
-    - task: fmt
-    - task: lint
-    - task: tests
-    - task: build
+      - task: tidy
+      - task: fmt
+      - task: lint
+      - task: tests
+      - task: build
 
   tidy:
-    cmds:
     - echo "- Tidy"
     - go mod tidy
     - task: vendor
 
   vendor:
-    cmds:
     - echo "- Vendor"
     - go mod vendor
 
   fmt:
-    cmds:
     - echo "- Format"
-    - docker run --rm -v "$(pwd):/app" -w /app tools-image gofumpt -w {{.GO_FILES}}
-    - docker run --rm -v "$(pwd):/app" -w /app tools-image gci write -s standard -s default -s "prefix({{.GO_MODULE}})" --skip-generated {{.GO_FILES}}
+    - gofumpt -w {{.GO_FILES}}
+    - gci write -s standard -s default -s "prefix({{.GO_MODULE}})" --skip-generated {{.GO_FILES}}
 
   lint:
     cmds:
-    - echo "- Lint"
-    - mkdir -p {{.GOLANGCI_LINT_CACHE}}
-    - task: lint:cmd
-      vars: {CLI_ARGS: "run -v --fix --timeout=5m ./..."}
+      - echo "- Lint"
+      - mkdir -p {{.GOLANGCI_LINT_CACHE}}
+      - task: lint:cmd
+        vars: {CLI_ARGS: "run -v --fix --timeout=5m ./..."}
 
   lint:cmd:
     cmds:
-    - |
-      docker run --rm \
-        -v "$(pwd):/app" -w /app \
-        -v "{{.GOLANGCI_LINT_CACHE}}:/root/.cache" \
-        tools-image \
-        golangci-lint {{.CLI_ARGS}}
-
+      - |
+        docker run --rm \
+          -v "$(pwd):/app" -w /app \
+          -v "{{.GOLANGCI_LINT_CACHE}}:/root/.cache" \
+          golangci/golangci-lint:{{.GOLANGCI_LINT_VERSION}} \
+          golangci-lint {{.CLI_ARGS}}
   tests:
     cmds:
-    - echo "- Tests"
-    - go test -race ./...
+      - echo "- Tests"
+      - go test -race ./...
 
   build:
     cmds:
-    - echo "- Build"
-    - go build ./cmd/chat-service
+      - echo "- Build"
+      - go build ./cmd/chat-service
 
   dev-tools:install:
     cmds:
-    - echo "- Build tools Docker image"
-    - docker build -t tools-image -f tools.Dockerfile .
-
+      - echo "- Install dev tools"
+      - |
+        {{- range $tool := splitList " " .DEV_TOOLS }}
+        go install {{ $tool }}
+        {{- end }}
   generate:
-    cmds:
     - echo "Run go generate..."
     - go generate ./...
