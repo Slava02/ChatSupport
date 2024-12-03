@@ -20,7 +20,6 @@ type Options struct {
 
 var defaultOptions = Options{
 	clock:          zapcore.DefaultClock,
-	level:          "debug",
 	productionMode: false,
 }
 
