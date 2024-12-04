@@ -5,14 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Slava02/ChatSupport/internal/buildinfo"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/Slava02/ChatSupport/internal/buildinfo"
+	"github.com/Slava02/ChatSupport/internal/logger"
 )
 
 const (
@@ -53,9 +56,11 @@ func New(opts Options) (*Server, error) {
 	e.GET("/version", s.Version)
 	index.addPage("/version", "Get build information")
 
-	// FIXME: Обработка "/log/level"
+	e.PUT("/log/level", s.LogLevel)
 
-	// FIXME: Обработка "/debug/pprof/" и связанных команд
+	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
+	index.addPage("/debug/pprof", "Go std profiler")
+	index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
 
 	e.GET("/", index.handler)
 	return s, nil
@@ -88,13 +93,28 @@ func (s *Server) Run(ctx context.Context) error {
 func (s *Server) Version(ctx echo.Context) error {
 	info, err := json.Marshal(buildinfo.BuildInfo)
 	if err != nil {
-		return fmt.Errorf("couldn't marshal buildinfo")
+		return ctx.String(http.StatusInternalServerError, "couldn't marshal buildinfo")
 	}
 
 	_, err = ctx.Response().Write(info)
 	if err != nil {
-		return fmt.Errorf("couldn't write buildinfo to response")
+		return ctx.String(http.StatusInternalServerError, "couldn't write buildinfo to response")
 	}
 
-	return nil
+	return ctx.String(http.StatusOK, "completed")
+}
+
+func (s *Server) LogLevel(ctx echo.Context) error {
+	level := ctx.FormValue("level")
+	if level == "" {
+		return ctx.String(http.StatusBadRequest, "level is required")
+	}
+
+	if err := logger.LogLevel.UnmarshalText([]byte(level)); err != nil {
+		return fmt.Errorf("parse log level: %v", err)
+	}
+
+	logger.LogLevel.SetLevel(logger.LogLevel.Level())
+
+	return ctx.String(http.StatusOK, "log level updated")
 }

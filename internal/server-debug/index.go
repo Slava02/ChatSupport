@@ -33,7 +33,9 @@ func (i indexPage) handler(eCtx echo.Context) error {
 <body>
 	<h2>Chat Service Debug</h2>
 	<ul>
-	// FIXME: список страниц
+		{{range .Pages}}
+		  <li><a href="{{.Path}}">{{.Path}}</a> {{.Description}}</li>
+	    {{end}}
 	</ul>
 
 	<h2>Log Level</h2>

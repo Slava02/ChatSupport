@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var LogLevel zap.AtomicLevel
+
 //go:generate options-gen -out-filename=logger_options.gen.go -from-struct=Options -defaults-from=var
 type Options struct {
 	level          string `option:"mandatory" validate:"required,oneof=debug info warn error"`
@@ -34,8 +36,7 @@ func Init(opts Options) error {
 		return fmt.Errorf("validate options: %v", err)
 	}
 
-	var logLevel zapcore.Level
-	if err := logLevel.UnmarshalText([]byte(opts.level)); err != nil {
+	if err := LogLevel.UnmarshalText([]byte(opts.level)); err != nil {
 		return fmt.Errorf("parse log level: %v", err)
 	}
 
@@ -63,7 +64,7 @@ func Init(opts Options) error {
 	}
 
 	cores := []zapcore.Core{
-		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), logLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), LogLevel),
 	}
 
 	l := zap.New(zapcore.NewTee(cores...), zap.WithClock(opts.clock))
