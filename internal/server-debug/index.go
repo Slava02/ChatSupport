@@ -41,10 +41,10 @@ func (i indexPage) handler(eCtx echo.Context) error {
 	<h2>Log Level</h2>
 	<form onSubmit="putLogLevel()">
 		<select id="log-level-select">
-			<option value="debug" {{if eq .LogLevel "debug"}}selected{{end}}>Debug</option>
-			<option value="info" {{if eq .LogLevel "info"}}selected{{end}}>Info</option>
-			<option value="warn" {{if eq .LogLevel "warn"}}selected{{end}}>Warn</option>
-			<option value="error" {{if eq .LogLevel "error"}}selected{{end}}>Error</option>
+			<option value="debug" {{if eq .ChangeLogLevel "debug"}}selected{{end}}>Debug</option>
+			<option value="info" {{if eq .ChangeLogLevel "info"}}selected{{end}}>Info</option>
+			<option value="warn" {{if eq .ChangeLogLevel "warn"}}selected{{end}}>Warn</option>
+			<option value="error" {{if eq .ChangeLogLevel "error"}}selected{{end}}>Error</option>
 		</select>
 		<input type="submit" value="Change"></input>
 	</form>

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -56,7 +55,8 @@ func New(opts Options) (*Server, error) {
 	e.GET("/version", s.Version)
 	index.addPage("/version", "Get build information")
 
-	e.PUT("/log/level", s.LogLevel)
+	e.PUT("/log/level", s.ChangeLogLevel)
+	e.GET("/log/level", s.GetLogLevel)
 
 	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
 	index.addPage("/debug/pprof", "Go std profiler")
@@ -104,17 +104,22 @@ func (s *Server) Version(ctx echo.Context) error {
 	return ctx.String(http.StatusOK, "completed")
 }
 
-func (s *Server) LogLevel(ctx echo.Context) error {
+func (s *Server) ChangeLogLevel(ctx echo.Context) error {
 	level := ctx.FormValue("level")
 	if level == "" {
 		return ctx.String(http.StatusBadRequest, "level is required")
 	}
 
 	if err := logger.LogLevel.UnmarshalText([]byte(level)); err != nil {
-		return fmt.Errorf("parse log level: %v", err)
+		return ctx.String(http.StatusBadRequest, "parse log level")
 	}
 
 	logger.LogLevel.SetLevel(logger.LogLevel.Level())
 
 	return ctx.String(http.StatusOK, "log level updated")
+}
+
+func (s *Server) GetLogLevel(ctx echo.Context) error {
+	level := logger.LogLevel.String()
+	return ctx.JSON(http.StatusOK, map[string]string{"level": level})
 }
