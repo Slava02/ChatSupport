@@ -16,6 +16,12 @@ vars:
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.33.1
     mvdan.cc/gofumpt@v0.7.0
 
+  DOCKER_COMPOSE_PATHS: |
+    ./deploy/local/docker-compose.yml
+    ./deploy/local/docker-compose.sentry.yml
+
+  DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
+
 tasks:
   default:
     cmds:
@@ -68,10 +74,48 @@ tasks:
     cmds:
       - echo "- Install dev tools"
       - |
-        {{- range $tool := splitList "\n" .DEV_TOOLS | compact}}
-        echo "{{ $tool }}"
+        {{ range $tool := .DEV_TOOLS | trim | splitLines -}}
         go install {{ $tool }}
-        {{- end }}
+        {{ end }}
   generate:
     - echo "Run go generate..."
     - go generate ./...
+
+  deps:
+    cmds:
+      - echo "- Starting dependencies"
+      - "{{.DOCKER_COMPOSE_CMD}} up -d {{.CLI_ARGS}}"
+
+  deps:cmd:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}}"
+
+  deps:status:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} ps"
+
+  deps:logs:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} logs {{.SERVICE}}"
+
+  deps:stop:
+    cmds:
+      - echo "- Stopping running services"
+      - "{{.DOCKER_COMPOSE_CMD}} stop"
+
+  deps:reset-psql:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: postgres
+
+  deps:reset-sentry:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: sentry sentry-worker cron redis
+
+  deps:reset:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} rm -fsv {{.SERVICE}}"
+      - "{{.DOCKER_COMPOSE_CMD}} up -d {{.SERVICE}}"

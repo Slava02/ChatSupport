@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: sentry
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: sentry
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgresql-data:/var/lib/postgresql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "127.0.0.1:5432:5432"
+
+volumes:
+  postgresql-data:
