@@ -3,6 +3,8 @@ module github.com/Slava02/ChatSupport
 go 1.23.3
 
 require (
+	github.com/TheZeroSlave/zapsentry v1.22.1
+	github.com/getsentry/sentry-go v0.20.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/kazhuravlev/options-gen v0.33.1
 	github.com/labstack/echo/v4 v4.12.0

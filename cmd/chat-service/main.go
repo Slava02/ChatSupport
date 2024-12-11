@@ -35,7 +35,12 @@ func run() (errReturned error) {
 		return fmt.Errorf("parse and validate config %q: %v", *configPath, err)
 	}
 
-	logger.MustInit(logger.NewOptions(cfg.Log.Level))
+	logger.MustInit(
+		logger.NewOptions(cfg.Log.Level,
+			logger.WithSentryDSN(cfg.Sentry.DSN),
+			logger.WithEnv(cfg.Global.Env),
+			logger.WithSentryDSN(cfg.Sentry.DSN),
+		))
 	defer logger.Sync()
 
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))

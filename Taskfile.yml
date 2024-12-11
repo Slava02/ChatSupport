@@ -22,6 +22,7 @@ vars:
 
   DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
 
+
 tasks:
   default:
     cmds:
@@ -82,9 +83,12 @@ tasks:
     - go generate ./...
 
   deps:
+    vars: {CLI_ARGS: "--profile sentry"}
     cmds:
       - echo "- Starting dependencies"
-      - "{{.DOCKER_COMPOSE_CMD}} up -d {{.CLI_ARGS}}"
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} up -d"
+      - task: deps
+
 
   deps:cmd:
     cmds:
@@ -99,9 +103,10 @@ tasks:
       - "{{.DOCKER_COMPOSE_CMD}} logs {{.SERVICE}}"
 
   deps:stop:
+    vars: {CLI_ARGS: "--profile sentry"}
     cmds:
       - echo "- Stopping running services"
-      - "{{.DOCKER_COMPOSE_CMD}} stop"
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} stop"
 
   deps:reset-psql:
     cmds:

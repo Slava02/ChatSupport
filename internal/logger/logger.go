@@ -3,12 +3,14 @@ package logger
 import (
 	"errors"
 	"fmt"
+	"github.com/TheZeroSlave/zapsentry"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	stdlog "log"
 	"os"
 	"syscall"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/Slava02/ChatSupport/internal/buildinfo"
 )
 
 var LogLevel zap.AtomicLevel
@@ -18,11 +20,14 @@ type Options struct {
 	level          string `option:"mandatory" validate:"required,oneof=debug info warn error"`
 	productionMode bool
 	clock          zapcore.Clock
+	sentryDSN      string `validate:"omitempty,url"`
+	env            string `validate:"omitempty,oneof=dev stage prod"`
 }
 
 var defaultOptions = Options{
 	clock:          zapcore.DefaultClock,
 	productionMode: false,
+	env:            "prod",
 }
 
 func MustInit(opts Options) {
@@ -68,6 +73,29 @@ func Init(opts Options) error {
 	}
 
 	l := zap.New(zapcore.NewTee(cores...), zap.WithClock(opts.clock))
+
+	if opts.sentryDSN != "" {
+		sentryClient, errNewClient := NewSentryClient(opts.sentryDSN, opts.env, buildinfo.Version())
+		if errNewClient != nil {
+			return fmt.Errorf("couldn't init sentry client: %v", errNewClient)
+		}
+
+		core, errNewCore := zapsentry.NewCore(zapsentry.Configuration{
+			Level:             zapcore.WarnLevel,
+			EnableBreadcrumbs: true,
+			BreadcrumbLevel:   zapcore.WarnLevel,
+			Tags: map[string]string{
+				"component": "system",
+			},
+		}, zapsentry.NewSentryClientFromClient(sentryClient))
+
+		if errNewCore != nil {
+			return fmt.Errorf("couldn't init sentry client: %v", errNewCore)
+		}
+
+		l = zapsentry.AttachCoreToLogger(core, l)
+	}
+
 	zap.ReplaceGlobals(l)
 
 	return nil
