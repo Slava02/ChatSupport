@@ -3,12 +3,13 @@ package logger
 import (
 	"errors"
 	"fmt"
-	"github.com/TheZeroSlave/zapsentry"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	stdlog "log"
 	"os"
 	"syscall"
+
+	"github.com/TheZeroSlave/zapsentry"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/Slava02/ChatSupport/internal/buildinfo"
 )

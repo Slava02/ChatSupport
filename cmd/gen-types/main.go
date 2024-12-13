@@ -109,7 +109,7 @@ func main() {
 	}
 
 	p, _ := os.Getwd()
-	fmt.Printf("%v generated\n", filepath.Join(p, out))
+	log.Printf("%v generated\n", filepath.Join(p, out))
 }
 
 func run(pkg string, types []string, outFile string) error {
@@ -129,7 +129,7 @@ func run(pkg string, types []string, outFile string) error {
 		return fmt.Errorf("formate source: %v", err)
 	}
 
-	if err := os.WriteFile(outFile, generated, 0o644); err != nil {
+	if err := os.WriteFile(outFile, generated, 0o644); err != nil { //nolint:gosec // completely safe
 		return fmt.Errorf("write file: %v", err)
 	}
 

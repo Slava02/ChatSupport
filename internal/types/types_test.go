@@ -3,7 +3,6 @@ package types_test
 import (
 	"database/sql/driver"
 	"encoding"
-	"github.com/Slava02/ChatSupport/internal/types"
 	"testing"
 
 	entfield "entgo.io/ent/schema/field"
@@ -11,6 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Slava02/ChatSupport/internal/types"
 )
 
 var _ interface {
