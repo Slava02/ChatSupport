@@ -1,10 +1,14 @@
 run:
   tests: true
-  build-tags: [ ] # Ждёт своего часа.
+  build-tags:
+    - integration
   skip-dirs: [ ] # Ждёт своего часа.
 
 issues:
   max-same-issues: 0
+  exclude-rules:
+    - path: internal/clients/keycloak
+      linters: [ tagliatelle ]
 
 linters-settings:
   exhaustive:

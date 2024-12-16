@@ -7,9 +7,11 @@ require (
 	github.com/TheZeroSlave/zapsentry v1.22.1
 	github.com/getsentry/sentry-go v0.20.0
 	github.com/go-playground/validator/v10 v10.23.0
+	github.com/go-resty/resty/v2 v2.16.2
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/kazhuravlev/options-gen v0.33.1
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/pelletier/go-toml v1.9.5
@@ -45,6 +47,6 @@ require (
 	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

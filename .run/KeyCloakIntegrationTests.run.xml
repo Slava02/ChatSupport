@@ -1,0 +1,22 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestKeycloakSuite in github.com/Slava02/ChatSupport/internal/clients/keycloak (1)" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="ChatSupport" />
+    <working_directory value="$PROJECT_DIR$/internal/clients/keycloak" />
+    <envs>
+      <env name="TEST_KEYCLOAK_CLIENT_ID" value="integration-testing" />
+      <env name="TEST_KEYCLOAK_CLIENT_SECRET" value="d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49" />
+      <env name="TEST_KEYCLOAK_REALM" value="Bank" />
+      <env name="TEST_KEYCLOAK_TEST_PASSWORD" value="integration-testing" />
+      <env name="TEST_KEYCLOAK_TEST_USER" value="integration-testing" />
+      <env name="TEST_LOG_LEVEL" value="info" />
+    </envs>
+    <root_directory value="$PROJECT_DIR$" />
+    <kind value="PACKAGE" />
+    <package value="github.com/Slava02/ChatSupport/internal/clients/keycloak" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <pattern value="^\QTestKeycloakSuite\E$" />
+    <method v="2" />
+  </configuration>
+</component>
