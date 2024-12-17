@@ -18,7 +18,7 @@ services:
     depends_on:
       - postgres
     command:
-      - start-dev
+      - start-dev --import-realm
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: postgres
@@ -28,6 +28,9 @@ services:
       DB_PASSWORD: keycloak
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_IMPORT: /opt/keycloak/data/import/bank-realm.json
+    volumes:
+      - ./bank-realm.json:/opt/keycloak/data/import/bank-realm.json
     ports:
       - "127.0.0.1:3010:8080"
 
