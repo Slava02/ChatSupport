@@ -20,6 +20,7 @@ vars:
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yml
     ./deploy/local/docker-compose.sentry.yml
+    ./deploy/local/docker-compose.swagger-ui.yml
 
   DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
 
@@ -132,7 +133,6 @@ tasks:
       - go run ./cmd/gen-types types ChatID,MessageID,ProblemID,RequestID,UserID ./internal/types/types.gen.go
 
   deps:
-    vars: {CLI_ARGS: "--profile sentry"}
     cmds:
       - echo "- Starting dependencies"
       - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} up -d"
@@ -151,7 +151,6 @@ tasks:
       - "{{.DOCKER_COMPOSE_CMD}} logs {{.SERVICE}}"
 
   deps:stop:
-    vars: {CLI_ARGS: "--profile sentry"}
     cmds:
       - echo "- Stopping running services"
       - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} stop"
@@ -174,12 +173,20 @@ tasks:
         vars:
           SERVICE: keycloak
 
+  deps:reset-swagger:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: swagger-ui
+
   deps:reset:
     cmds:
       - "{{.DOCKER_COMPOSE_CMD}} rm -fsv {{.SERVICE}}"
       - "{{.DOCKER_COMPOSE_CMD}} up -d {{.SERVICE}}"
 
   kc:export:
+    # https://www.keycloak.org/server/importExport
     cmds:
-      - docker exec -it local-keycloak-1 /opt/keycloak/bin/kc.sh export --users realm_file --file /tmp/bank-realm.json --realm Bank
+      - cmd: docker exec -it local-keycloak-1 /opt/keycloak/bin/kc.sh export --users realm_file --file /tmp/bank-realm.json --realm Bank
+        ignore_error: true
       - docker cp local-keycloak-1:/tmp/bank-realm.json {{.KEYCLOAK_REALM_PATH}}

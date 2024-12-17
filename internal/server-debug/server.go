@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -58,9 +59,24 @@ func New(opts Options) (*Server, error) {
 	e.PUT("/log/level", s.ChangeLogLevel)
 	e.GET("/log/level", s.GetLogLevel)
 
-	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
-	index.addPage("/debug/pprof", "Go std profiler")
-	index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
+	{
+		pprofMux := http.NewServeMux()
+		pprofMux.HandleFunc("/debug/pprof/", pprof.Index)
+		pprofMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		pprofMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		pprofMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		pprofMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		pprofMux.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+
+		e.GET("/debug/pprof/*", echo.WrapHandler(pprofMux))
+		index.addPage("/debug/pprof/", "Go std profiler")
+		index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
+	}
 
 	e.GET("/debug/error", s.SendError)
 	index.addPage("/debug/error", "Debug sentry error event")
