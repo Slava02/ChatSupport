@@ -49,7 +49,7 @@ components:
         x-go-type-import:
           path: "github.com/Slava02/ChatSupport/internal/types"
       required: true
-      example: "00000000-0000-0000-0000-000000000000"
+      example: "151d6a6c-c716-43ab-93ff-bbd78d299027"
 
   schemas:
     # /getHistory
@@ -89,7 +89,7 @@ components:
         authorId:
           type: string
           format: uuid
-          x-go-type: types.AuthorID
+          x-go-type: types.UserID
           x-go-type-import:
             path: "github.com/Slava02/ChatSupport/internal/types"
         body:

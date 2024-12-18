@@ -15,7 +15,9 @@ vars:
     github.com/daixiang0/gci@v0.13.5
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.33.1
     mvdan.cc/gofumpt@v0.7.0
-    entgo.io/ent/cmd/ent@0.14.0
+    entgo.io/ent/cmd/ent@v0.14.0
+    github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1
+    go.uber.org/mock/mockgen@v0.5.0
 
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yml
@@ -108,6 +110,7 @@ tasks:
     - go generate ./...
     - task: gen:types
     - task: ent:gen
+    - task: gen:api
 
   ent:new:
     cmds:
@@ -131,6 +134,15 @@ tasks:
     cmds:
       - echo "Generate types..."
       - go run ./cmd/gen-types types ChatID,MessageID,ProblemID,RequestID,UserID ./internal/types/types.gen.go
+
+  gen:api:
+    cmds:
+      - task: gen:client
+
+  gen:client:
+    cmds:
+      - echo "Generate client server..."
+      - oapi-codegen -old-config-style -generate skip-prune,types,server,spec -package clientv1 api/client.v1.swagger.yml > internal/server-client/v1/server.gen.go
 
   deps:
     cmds:
