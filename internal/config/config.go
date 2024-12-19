@@ -5,6 +5,7 @@ type Config struct {
 	Log     LogConfig     `toml:"log"`
 	Servers ServersConfig `toml:"servers"`
 	Sentry  SentryConfig  `toml:"sentry"`
+	Clients Clients       `toml:"clients"`
 }
 
 type GlobalConfig struct {
@@ -37,4 +38,16 @@ type RequiredAccess struct {
 
 type SentryConfig struct {
 	DSN string `toml:"dsn" validate:"omitempty,url"`
+}
+
+type Clients struct {
+	Keycloak `toml:"keycloak"`
+}
+
+type Keycloak struct {
+	BasePath     string `toml:"base_path" validate:"required,url"`
+	Realm        string `tom:"realm" validate:"required"`
+	ClientID     string `toml:"client_id" validate:"required"`
+	ClientSecret string `toml:"client_secret" validate:"required"`
+	DebugMode    bool   `toml:"client_secret" default:"false" validate:"required"`
 }

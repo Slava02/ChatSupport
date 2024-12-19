@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"log"
 	"os/signal"
 	"syscall"
@@ -53,6 +54,10 @@ func run() (errReturned error) {
 	if err != nil {
 		return fmt.Errorf("get swagger: %v", err)
 	}
+
+	// TODO
+	keyCloakClient, err := keycloakclient.New(keycloakclient.NewOptions())
+
 	srvClient, err := initServerClient(cfg.Servers.Client.Addr, cfg.Servers.Client.AllowOrigins, clientv1Swagger)
 	if err != nil {
 		return fmt.Errorf("init client server: %v", err)

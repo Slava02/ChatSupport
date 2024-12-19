@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Slava02/ChatSupport/internal/middlewares"
 	"net/http"
 	"time"
 
@@ -47,6 +48,9 @@ func New(opts Options) (*Server, error) {
 		middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: opts.allowOrigins,
 		}),
+		middleware.BodyLimit("12KB"),
+		middlewares.NewLogging(opts.logger),
+		middlewares.NewKeycloakTokenAuth(key)
 	)
 
 	v1 := e.Group("v1", oapimdlwr.OapiRequestValidatorWithOptions(opts.v1Swagger, &oapimdlwr.Options{

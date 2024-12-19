@@ -4,6 +4,9 @@ env = "dev"
 [log]
 level = "debug"
 
+[sentry]
+dsn = ""
+
 [servers]
 [servers.client]
 addr = ":8080"
@@ -14,5 +17,12 @@ role = "support-chat-client"
 [servers.debug]
 addr = ":8079"
 
-[sentry]
-dsn = ""
+[clients]
+[clients.keycloak]
+base_path = "http://localhost:3010"
+realm = "Bank"
+client_id = "chat-service"
+client_secret = "подставьте-свой-секрет"
+debug_mode = false
+
+

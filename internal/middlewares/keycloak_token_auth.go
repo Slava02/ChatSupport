@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -34,7 +33,7 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 
 			token, err := introspector.IntrospectToken(eCtx.Request().Context(), tokenStr)
 			if err != nil {
-				return false, fmt.Errorf("token introseption error: %v", err)
+				return false, err
 			}
 
 			if !token.Active {
@@ -42,9 +41,12 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 			}
 
 			var cl claims
-			t, _, err := new(jwt.Parser).ParseUnverified(tokenStr, &cl)
+			t, _, _ := new(jwt.Parser).ParseUnverified(tokenStr, &cl)
 			if err != nil {
-				// Unreachable.
+				return false, err
+			}
+
+			if err = cl.Valid(); err != nil {
 				return false, err
 			}
 
