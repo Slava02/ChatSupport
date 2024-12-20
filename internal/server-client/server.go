@@ -49,11 +49,12 @@ func New(opts Options) (*Server, error) {
 
 	e := echo.New()
 	e.Use(
+		middlewares.NewRecovery(opts.logger),
+		middlewares.NewLogging(opts.logger),
+		middleware.BodyLimit("12KB"),
 		middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: opts.allowOrigins,
 		}),
-		middleware.BodyLimit("12KB"),
-		middlewares.NewLogging(opts.logger),
 		middlewares.NewKeycloakTokenAuth(opts.keycloak, opts.resource, opts.role),
 	)
 

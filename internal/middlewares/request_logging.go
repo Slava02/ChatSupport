@@ -9,6 +9,9 @@ import (
 // NewLogging returns a middleware that logs incoming requests with specific details.
 func NewLogging(lg *zap.Logger) echo.MiddlewareFunc {
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		Skipper: func(eCtx echo.Context) bool {
+			return eCtx.Request().Method == echo.OPTIONS
+		},
 		LogLatency:   true,
 		LogRemoteIP:  true,
 		LogHost:      true,
