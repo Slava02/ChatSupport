@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/pelletier/go-toml"
+	"go.uber.org/zap"
 
 	"github.com/Slava02/ChatSupport/internal/validator"
 )
@@ -32,6 +33,10 @@ func ParseAndValidate(filename string) (Config, error) {
 	err = validator.Validator.Struct(config)
 	if err != nil {
 		return Config{}, fmt.Errorf("validation error: %w", err)
+	}
+
+	if config.Clients.Keycloak.DebugMode && config.Global.Env == "prod" {
+		zap.L().Warn("Keycloak is set to debug mode while app is in production mode")
 	}
 
 	return config, nil

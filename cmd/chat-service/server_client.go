@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"go.uber.org/zap"
 
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	serverclient "github.com/Slava02/ChatSupport/internal/server-client"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 )
@@ -35,8 +35,8 @@ func initServerClient(
 		v1Swagger,
 		v1Handlers,
 		keycloak,
-		requiredRole,
 		requiredResource,
+		requiredRole,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("build server: %v", err)

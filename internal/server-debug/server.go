@@ -155,7 +155,7 @@ func (s *Server) SendError(ctx echo.Context) error {
 func (s *Server) GetSchema(ctx echo.Context) error {
 	swagger, err := clientv1.GetSwagger()
 	if err != nil {
-		return fmt.Errorf("couldn't get swagger")
+		return errors.New("couldn't get swagger")
 	}
 
 	return ctx.JSONPretty(http.StatusOK, swagger, " ")

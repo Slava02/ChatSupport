@@ -3,10 +3,11 @@ package middlewares
 import (
 	"context"
 	"errors"
+	"strings"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"strings"
 
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/types"
@@ -41,7 +42,7 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 			}
 
 			var cl claims
-			t, _, _ := new(jwt.Parser).ParseUnverified(tokenStr, &cl)
+			t, _, err := new(jwt.Parser).ParseUnverified(tokenStr, &cl)
 			if err != nil {
 				return false, err
 			}
@@ -50,7 +51,7 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 				return false, err
 			}
 
-			if !cl.ResourceAccess.HasResourceRole(role, resource) {
+			if !cl.ResourceAccess.HasResourceRole(resource, role) {
 				return false, echo.ErrForbidden.WithInternal(ErrNoRequiredResourceRole)
 			}
 

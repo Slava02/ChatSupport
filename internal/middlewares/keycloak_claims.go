@@ -2,10 +2,10 @@ package middlewares
 
 import (
 	"errors"
-	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 
 	"github.com/golang-jwt/jwt"
 
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/types"
 )
 
@@ -34,7 +34,7 @@ func (c claims) Valid() error {
 		return err
 	}
 
-	if c.ResourceAccess == nil || len(c.ResourceAccess) == 0 {
+	if len(c.ResourceAccess) == 0 {
 		return ErrNoAllowedResources
 	}
 

@@ -474,6 +474,7 @@ func (mq *MessageQuery) loadChat(ctx context.Context, query *ChatQuery, nodes []
 	}
 	return nil
 }
+
 func (mq *MessageQuery) loadProblem(ctx context.Context, query *ProblemQuery, nodes []*Message, init func(*Message), assign func(*Message, *Problem)) error {
 	ids := make([]types.ProblemID, 0, len(nodes))
 	nodeids := make(map[types.ProblemID][]*Message)

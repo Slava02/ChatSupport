@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
-	"github.com/Slava02/ChatSupport/internal/middlewares"
 	"net/http"
 	"time"
 
@@ -17,6 +15,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
+	"github.com/Slava02/ChatSupport/internal/middlewares"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 )
 
