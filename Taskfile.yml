@@ -15,6 +15,26 @@ vars:
     github.com/daixiang0/gci@v0.13.5
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.33.1
     mvdan.cc/gofumpt@v0.7.0
+    entgo.io/ent/cmd/ent@v0.14.0
+    github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1
+    go.uber.org/mock/mockgen@v0.5.0
+
+  DOCKER_COMPOSE_PATHS: |
+    ./deploy/local/docker-compose.yml
+    ./deploy/local/docker-compose.sentry.yml
+    ./deploy/local/docker-compose.swagger-ui.yml
+
+  DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
+
+  KEYCLOAK_REALM_PATH: ./deploy/local/bank-realm.json
+
+  TYPES: |
+    ChatID
+    MessageID
+    ProblemID
+    UserID
+  TYPES_PKG: types
+  TYPES_DST: ./internal/types/types.gen.go
 
 tasks:
   default:
@@ -54,10 +74,23 @@ tasks:
           -v "{{.GOLANGCI_LINT_CACHE}}:/root/.cache" \
           golangci/golangci-lint:{{.GOLANGCI_LINT_VERSION}} \
           golangci-lint {{.CLI_ARGS}}
+
   tests:
     cmds:
       - echo "- Tests"
       - go test -race ./...
+
+  tests:integration:
+    env:
+      TEST_LOG_LEVEL: info
+      TEST_KEYCLOAK_REALM: Bank
+      TEST_KEYCLOAK_CLIENT_ID: integration-testing
+      TEST_KEYCLOAK_CLIENT_SECRET: d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49
+      TEST_KEYCLOAK_TEST_USER: integration-testing
+      TEST_KEYCLOAK_TEST_PASSWORD: integration-testing
+    cmds:
+      - echo "- Integration tests"
+      - go test -tags integration -count 1 -race ./...
 
   build:
     cmds:
@@ -68,10 +101,104 @@ tasks:
     cmds:
       - echo "- Install dev tools"
       - |
-        {{- range $tool := splitList "\n" .DEV_TOOLS | compact}}
-        echo "{{ $tool }}"
+        {{ range $tool := .DEV_TOOLS | trim | splitLines -}}
         go install {{ $tool }}
-        {{- end }}
+        {{ end }}
+
   generate:
     - echo "Run go generate..."
     - go generate ./...
+    - task: gen:types
+    - task: ent:gen
+    - task: gen:api
+
+  ent:new:
+    cmds:
+      - ent new --target ./internal/store/schema {{.CLI_ARGS}}
+      - task: tidy
+
+  ent:gen:
+    cmds:
+      - ent generate ./internal/store/schema
+      - task: tidy
+
+  ent:atlas:
+    cmds:
+      - |
+        atlas schema inspect \
+        -u "ent://internal/store/schema" \
+        --dev-url "sqlite://file?mode=memory&_fk=1" \
+        -w
+
+  gen:types:
+    cmds:
+      - echo "Generate types..."
+      - go run ./cmd/gen-types types ChatID,MessageID,ProblemID,RequestID,UserID ./internal/types/types.gen.go
+
+  gen:api:
+    cmds:
+      - task: gen:client
+
+  gen:client:
+    cmds:
+      - echo "Generate client server..."
+      - oapi-codegen -old-config-style -generate skip-prune,types,server,spec -package clientv1 api/client.v1.swagger.yml > internal/server-client/v1/server.gen.go
+
+  deps:
+    cmds:
+      - echo "- Starting dependencies"
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} up -d"
+
+
+  deps:cmd:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}}"
+
+  deps:status:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} ps"
+
+  deps:logs:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} logs {{.SERVICE}}"
+
+  deps:stop:
+    cmds:
+      - echo "- Stopping running services"
+      - "{{.DOCKER_COMPOSE_CMD}} {{.CLI_ARGS}} stop"
+
+  deps:reset-psql:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: postgres
+
+  deps:reset-sentry:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: sentry sentry-worker cron redis
+
+  deps:reset-kc:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: keycloak
+
+  deps:reset-swagger:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: swagger-ui
+
+  deps:reset:
+    cmds:
+      - "{{.DOCKER_COMPOSE_CMD}} rm -fsv {{.SERVICE}}"
+      - "{{.DOCKER_COMPOSE_CMD}} up -d {{.SERVICE}}"
+
+  kc:export:
+    # https://www.keycloak.org/server/importExport
+    cmds:
+      - cmd: docker exec -it local-keycloak-1 /opt/keycloak/bin/kc.sh export --users realm_file --file /tmp/bank-realm.json --realm Bank
+        ignore_error: true
+      - docker cp local-keycloak-1:/tmp/bank-realm.json {{.KEYCLOAK_REALM_PATH}}
