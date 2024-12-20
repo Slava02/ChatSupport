@@ -16,6 +16,7 @@ import (
 
 	"github.com/Slava02/ChatSupport/internal/buildinfo"
 	"github.com/Slava02/ChatSupport/internal/logger"
+	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 )
 
 const (
@@ -77,6 +78,9 @@ func New(opts Options) (*Server, error) {
 		index.addPage("/debug/pprof/", "Go std profiler")
 		index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
 	}
+
+	e.GET("/schema/client", s.GetSchema)
+	index.addPage("/schema/client", "Get client OpenAPI specification")
 
 	e.GET("/debug/error", s.SendError)
 	index.addPage("/debug/error", "Debug sentry error event")
@@ -140,10 +144,19 @@ func (s *Server) ChangeLogLevel(ctx echo.Context) error {
 
 func (s *Server) GetLogLevel(ctx echo.Context) error {
 	level := logger.LogLevel.String()
-	return ctx.JSON(http.StatusOK, map[string]string{"level": level})
+	return ctx.JSONPretty(http.StatusOK, map[string]string{"level": level}, " ")
 }
 
 func (s *Server) SendError(ctx echo.Context) error {
 	s.lg.Error("look for me in sentry")
 	return ctx.String(http.StatusOK, "event sent")
+}
+
+func (s *Server) GetSchema(ctx echo.Context) error {
+	swagger, err := clientv1.GetSwagger()
+	if err != nil {
+		return fmt.Errorf("couldn't get swagger")
+	}
+
+	return ctx.JSONPretty(http.StatusOK, swagger, " ")
 }
