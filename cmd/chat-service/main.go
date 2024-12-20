@@ -6,13 +6,13 @@ import (
 	"flag"
 	"fmt"
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
+	"github.com/Slava02/ChatSupport/internal/config"
 	"log"
 	"os/signal"
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Slava02/ChatSupport/internal/config"
 	"github.com/Slava02/ChatSupport/internal/logger"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
@@ -55,10 +55,21 @@ func run() (errReturned error) {
 		return fmt.Errorf("get swagger: %v", err)
 	}
 
-	// TODO
-	keyCloakClient, err := keycloakclient.New(keycloakclient.NewOptions())
+	kc, err := keycloakclient.New(keycloakclient.NewOptions(
+		cfg.Clients.Keycloak.BasePath,
+		cfg.Clients.Keycloak.Realm,
+		cfg.Clients.Keycloak.ClientID,
+		cfg.Clients.Keycloak.ClientSecret,
+	))
 
-	srvClient, err := initServerClient(cfg.Servers.Client.Addr, cfg.Servers.Client.AllowOrigins, clientv1Swagger)
+	srvClient, err := initServerClient(
+		cfg.Servers.Client.Addr,
+		cfg.Servers.Client.AllowOrigins,
+		clientv1Swagger,
+		kc,
+		cfg.Servers.Client.Access.Role,
+		cfg.Servers.Client.Access.Resource,
+	)
 	if err != nil {
 		return fmt.Errorf("init client server: %v", err)
 	}

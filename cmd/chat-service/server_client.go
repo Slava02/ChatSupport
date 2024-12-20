@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"go.uber.org/zap"
@@ -16,6 +17,9 @@ func initServerClient(
 	addr string,
 	allowOrigins []string,
 	v1Swagger *openapi3.T,
+	keycloak *keycloakclient.Client,
+	requiredRole string,
+	requiredResource string,
 ) (*serverclient.Server, error) {
 	lg := zap.L().Named(nameServerClient)
 
@@ -30,6 +34,9 @@ func initServerClient(
 		allowOrigins,
 		v1Swagger,
 		v1Handlers,
+		keycloak,
+		requiredRole,
+		requiredResource,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("build server: %v", err)

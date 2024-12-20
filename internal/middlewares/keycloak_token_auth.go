@@ -50,7 +50,7 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 				return false, err
 			}
 
-			if !cl.ResourceAccess.HasResourceRole(resource, role) {
+			if !cl.ResourceAccess.HasResourceRole(role, resource) {
 				return false, echo.ErrForbidden.WithInternal(ErrNoRequiredResourceRole)
 			}
 

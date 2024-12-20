@@ -49,5 +49,5 @@ type Keycloak struct {
 	Realm        string `tom:"realm" validate:"required"`
 	ClientID     string `toml:"client_id" validate:"required"`
 	ClientSecret string `toml:"client_secret" validate:"required"`
-	DebugMode    bool   `toml:"client_secret" default:"false" validate:"required"`
+	DebugMode    bool   `toml:"debug_mode" default:"false" validate:"omitempty"`
 }
