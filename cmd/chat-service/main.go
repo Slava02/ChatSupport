@@ -11,8 +11,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/config"
 	"github.com/Slava02/ChatSupport/internal/logger"
+	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
 )
 
@@ -35,7 +37,12 @@ func run() (errReturned error) {
 		return fmt.Errorf("parse and validate config %q: %v", *configPath, err)
 	}
 
-	logger.MustInit(logger.NewOptions(cfg.Log.Level))
+	logger.MustInit(
+		logger.NewOptions(cfg.Log.Level,
+			logger.WithSentryDSN(cfg.Sentry.DSN),
+			logger.WithEnv(cfg.Global.Env),
+			logger.WithSentryDSN(cfg.Sentry.DSN),
+		))
 	defer logger.Sync()
 
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
@@ -43,10 +50,38 @@ func run() (errReturned error) {
 		return fmt.Errorf("init debug server: %v", err)
 	}
 
+	clientv1Swagger, err := clientv1.GetSwagger()
+	if err != nil {
+		return fmt.Errorf("get swagger: %v", err)
+	}
+
+	kc, err := keycloakclient.New(keycloakclient.NewOptions(
+		cfg.Clients.Keycloak.BasePath,
+		cfg.Clients.Keycloak.Realm,
+		cfg.Clients.Keycloak.ClientID,
+		cfg.Clients.Keycloak.ClientSecret,
+	))
+	if err != nil {
+		return fmt.Errorf("failed to init keycloak client: %v", err)
+	}
+
+	srvClient, err := initServerClient(
+		cfg.Servers.Client.Addr,
+		cfg.Servers.Client.AllowOrigins,
+		clientv1Swagger,
+		kc,
+		cfg.Servers.Client.Access.Role,
+		cfg.Servers.Client.Access.Resource,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to init client server: %v", err)
+	}
+
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// Run servers.
 	eg.Go(func() error { return srvDebug.Run(ctx) })
+	eg.Go(func() error { return srvClient.Run(ctx) })
 
 	// Run services.
 	// Ждут своего часа.

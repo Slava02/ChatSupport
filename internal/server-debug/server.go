@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/Slava02/ChatSupport/internal/buildinfo"
 	"github.com/Slava02/ChatSupport/internal/logger"
+	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 )
 
 const (
@@ -58,9 +60,30 @@ func New(opts Options) (*Server, error) {
 	e.PUT("/log/level", s.ChangeLogLevel)
 	e.GET("/log/level", s.GetLogLevel)
 
-	e.GET("/debug/pprof/*", echo.WrapHandler(http.DefaultServeMux))
-	index.addPage("/debug/pprof", "Go std profiler")
-	index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
+	{
+		pprofMux := http.NewServeMux()
+		pprofMux.HandleFunc("/debug/pprof/", pprof.Index)
+		pprofMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		pprofMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		pprofMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		pprofMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		pprofMux.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+		pprofMux.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+
+		e.GET("/debug/pprof/*", echo.WrapHandler(pprofMux))
+		index.addPage("/debug/pprof/", "Go std profiler")
+		index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
+	}
+
+	e.GET("/schema/client", s.GetSchema)
+	index.addPage("/schema/client", "Get client OpenAPI specification")
+
+	e.GET("/debug/error", s.SendError)
+	index.addPage("/debug/error", "Debug sentry error event")
 
 	e.GET("/", index.handler)
 	return s, nil
@@ -121,5 +144,19 @@ func (s *Server) ChangeLogLevel(ctx echo.Context) error {
 
 func (s *Server) GetLogLevel(ctx echo.Context) error {
 	level := logger.LogLevel.String()
-	return ctx.JSON(http.StatusOK, map[string]string{"level": level})
+	return ctx.JSONPretty(http.StatusOK, map[string]string{"level": level}, " ")
+}
+
+func (s *Server) SendError(ctx echo.Context) error {
+	s.lg.Error("look for me in sentry")
+	return ctx.String(http.StatusOK, "event sent")
+}
+
+func (s *Server) GetSchema(ctx echo.Context) error {
+	swagger, err := clientv1.GetSwagger()
+	if err != nil {
+		return errors.New("couldn't get swagger")
+	}
+
+	return ctx.JSONPretty(http.StatusOK, swagger, " ")
 }
