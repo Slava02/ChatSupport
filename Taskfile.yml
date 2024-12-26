@@ -81,13 +81,8 @@ tasks:
       - go test -race ./...
 
   tests:integration:
-    env:
-      TEST_LOG_LEVEL: info
-      TEST_KEYCLOAK_REALM: Bank
-      TEST_KEYCLOAK_CLIENT_ID: integration-testing
-      TEST_KEYCLOAK_CLIENT_SECRET: d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49
-      TEST_KEYCLOAK_TEST_USER: integration-testing
-      TEST_KEYCLOAK_TEST_PASSWORD: integration-testing
+    dotenv:
+      - .env
     cmds:
       - echo "- Integration tests"
       - go test -tags integration -count 1 -race ./...
@@ -119,7 +114,7 @@ tasks:
 
   ent:gen:
     cmds:
-      - ent generate ./internal/store/schema
+      - ent generate ./internal/store/schema --template ./internal/store/templates
       - task: tidy
 
   ent:atlas:
