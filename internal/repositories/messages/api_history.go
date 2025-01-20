@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/Slava02/ChatSupport/internal/store"
 	"github.com/Slava02/ChatSupport/internal/store/chat"
 	"github.com/Slava02/ChatSupport/internal/store/message"
-	"time"
-
 	"github.com/Slava02/ChatSupport/internal/types"
 )
 

@@ -2,9 +2,10 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
+
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -27,7 +28,7 @@ func NewPSQLClient(opts PSQLOptions) (*Client, error) {
 		return nil, fmt.Errorf("init db driver: %v", err)
 	}
 
-	var clientOpts = []Option{
+	clientOpts := []Option{
 		Driver(entsql.OpenDB(dialect.Postgres, db)),
 	}
 
