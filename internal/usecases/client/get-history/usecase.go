@@ -50,7 +50,7 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 
 	var reqCursor *messagesrepo.Cursor
 	if req.Cursor != "" {
-		if err := cursor.Decode(req.Cursor, reqCursor); err != nil {
+		if err := cursor.Decode(req.Cursor, &reqCursor); err != nil {
 			return Response{}, fmt.Errorf("decode cursor: %w: %v", ErrInvalidCursor, err)
 		}
 	}
