@@ -1,9 +1,11 @@
 package gethistory
 
 import (
+	"errors"
+	"time"
+
 	"github.com/Slava02/ChatSupport/internal/types"
 	"github.com/Slava02/ChatSupport/internal/validator"
-	"time"
 )
 
 type Request struct {
@@ -14,6 +16,13 @@ type Request struct {
 }
 
 func (r Request) Validate() error {
+	if r.Cursor == "" && r.PageSize == 0 {
+		return errors.New("either cursor or page size must be specified")
+	}
+	if r.Cursor != "" && r.PageSize != 0 {
+		return errors.New("either cursor or page size must be specified, not both")
+	}
+
 	return validator.Validator.Struct(r)
 }
 
@@ -24,7 +33,7 @@ type Response struct {
 
 type Message struct {
 	ID         types.MessageID `validate:"required"`
-	AuthorID   types.UserID    `validate:"required"`
+	AuthorID   types.UserID    `validate:"omitempty"`
 	Body       string          `validate:"required"`
 	CreatedAt  time.Time       `validate:"required"`
 	IsReceived bool            `validate:"omitempty"`

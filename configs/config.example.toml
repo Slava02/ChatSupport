@@ -25,4 +25,12 @@ client_id = "chat-service"
 client_secret = "подставьте-свой-секрет"
 debug_mode = false
 
+[stores]
+[stores.psql]
+address = "127.0.0.1:5432"
+username = "chat-service"
+password = "chat-service"
+database = "chat-service"
+debug = false
+
 

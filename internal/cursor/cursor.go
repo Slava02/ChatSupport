@@ -6,12 +6,12 @@ import (
 )
 
 func Encode(data any) (string, error) {
-	dataJson, err := json.Marshal(data)
+	marshalled, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
 
-	return base64.StdEncoding.EncodeToString(dataJson), nil
+	return base64.StdEncoding.EncodeToString(marshalled), nil
 }
 
 func Decode(in string, to any) error {

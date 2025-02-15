@@ -1,10 +1,12 @@
 package errhandler
 
 import (
-	"github.com/Slava02/ChatSupport/internal/errors"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
-	"net/http"
+
+	"github.com/Slava02/ChatSupport/internal/errors"
 )
 
 var _ echo.HTTPErrorHandler = Handler{}.Handle

@@ -147,7 +147,7 @@ func (s *StoreSuite) TestNoNestedTransactions() {
 
 	err = s.Database.RunInTx(ctx, func(ctx context.Context) error {
 		tx2 := store.TxFromContext(ctx)
-		s.True(tx == tx2, "we should reuse existing transaction") // The same pointers.
+		s.Same(tx, tx2, "we should reuse existing transaction") // The same pointers.
 		return nil
 	})
 	s.Require().NoError(err)

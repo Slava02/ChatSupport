@@ -6,7 +6,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // postgres driver
 )
 
 //go:generate options-gen -out-filename=client_psql_options.gen.go -from-struct=PSQLOptions

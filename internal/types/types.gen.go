@@ -75,6 +75,13 @@ func (t *ChatID) Matches(x interface{}) bool {
 	return *t == other
 }
 
+func (t ChatID) AsPointer() *ChatID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
 // MessageID type
 
 type MessageID uuid.UUID
@@ -127,6 +134,13 @@ func (t *MessageID) Matches(x interface{}) bool {
 		return false
 	}
 	return *t == other
+}
+
+func (t MessageID) AsPointer() *MessageID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
 }
 
 // ProblemID type
@@ -183,6 +197,13 @@ func (t *ProblemID) Matches(x interface{}) bool {
 	return *t == other
 }
 
+func (t ProblemID) AsPointer() *ProblemID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
 // RequestID type
 
 type RequestID uuid.UUID
@@ -237,6 +258,13 @@ func (t *RequestID) Matches(x interface{}) bool {
 	return *t == other
 }
 
+func (t RequestID) AsPointer() *RequestID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
 // UserID type
 
 type UserID uuid.UUID
@@ -289,4 +317,11 @@ func (t *UserID) Matches(x interface{}) bool {
 		return false
 	}
 	return *t == other
+}
+
+func (t UserID) AsPointer() *UserID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
 }

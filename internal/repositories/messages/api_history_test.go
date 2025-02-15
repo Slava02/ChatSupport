@@ -234,7 +234,10 @@ type cursor struct {
 	LastCreatedAtAsUnixMilli int64
 }
 
-func (s *MsgRepoHistoryAPISuite) getClientChatMessagesWhileCursor(clientID types.UserID, pageSize int) ([][]msg, []cursor) {
+func (s *MsgRepoHistoryAPISuite) getClientChatMessagesWhileCursor(
+	clientID types.UserID,
+	pageSize int,
+) ([][]msg, []cursor) {
 	s.T().Helper()
 
 	var result [][]msg

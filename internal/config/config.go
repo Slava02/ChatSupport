@@ -6,6 +6,7 @@ type Config struct {
 	Servers ServersConfig `toml:"servers"`
 	Sentry  SentryConfig  `toml:"sentry"`
 	Clients Clients       `toml:"clients"`
+	Stores  Stores        `toml:"stores"`
 }
 
 type GlobalConfig struct {
@@ -50,4 +51,16 @@ type Keycloak struct {
 	ClientID     string `toml:"client_id" validate:"required"`
 	ClientSecret string `toml:"client_secret" validate:"required"`
 	DebugMode    bool   `toml:"debug_mode" default:"false" validate:"omitempty"`
+}
+
+type Stores struct {
+	PSQL PSQL `toml:"psql"`
+}
+
+type PSQL struct {
+	Address  string `toml:"address" validate:"required,hostname_port"`
+	Username string `toml:"username" validate:"required"`
+	Password string `toml:"password" validate:"required"`
+	Database string `toml:"database" validate:"required"`
+	Debug    bool   `toml:"debug" validate:"omitempty"`
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Slava02/ChatSupport/internal/cursor"
 
+	"github.com/Slava02/ChatSupport/internal/cursor"
 	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
 	"github.com/Slava02/ChatSupport/internal/types"
 )
@@ -65,13 +65,13 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 		}
 	}
 
-	var nextCoursor string
+	var nextCursor string
 	if next != nil {
 		data, err := cursor.Encode(next)
 		if err != nil {
 			return Response{}, fmt.Errorf("encode cursor: %v", err)
 		}
-		nextCoursor = data
+		nextCursor = data
 	}
 
 	messagesArr := make([]Message, 0, len(messages))
@@ -89,6 +89,6 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 
 	return Response{
 		Messages:   messagesArr,
-		NextCursor: nextCoursor,
+		NextCursor: nextCursor,
 	}, nil
 }
