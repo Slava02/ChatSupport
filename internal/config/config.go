@@ -55,3 +55,15 @@ type KeycloakConfig struct {
 	ClientSecret string `toml:"client_secret" validate:"required,alphanum"`
 	DebugMode    bool   `toml:"debug_mode"`
 }
+
+type Stores struct {
+	PSQL PSQL `toml:"psql"`
+}
+
+type PSQL struct {
+	Address  string `toml:"address" validate:"required,hostname_port"`
+	Username string `toml:"username" validate:"required"`
+	Password string `toml:"password" validate:"required"`
+	Database string `toml:"database" validate:"required"`
+	Debug    bool   `toml:"debug" validate:"omitempty"`
+}

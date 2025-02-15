@@ -27,6 +27,7 @@ vars:
   DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
 
   ENT_SCHEMA: ./internal/store/schema
+  ENT_TEMPLATE: ./internal/store/templates
 
   KEYCLOAK_REALM_PATH: ./deploy/local/bank-realm.json
 
@@ -88,8 +89,16 @@ tasks:
       - go test -race ./...
 
   tests:integration:
-    dotenv:
-      - .env
+    env:
+      LOG_LEVEL: info
+      KEYCLOAK_REALM: Bank
+      KEYCLOAK_CLIENT_ID: integration-testing
+      KEYCLOAK_CLIENT_SECRET: d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49
+      KEYCLOAK_TEST_USER: integration-testing
+      KEYCLOAK_TEST_PASSWORD: integration-testing
+
+      PSQL_USER: chat-service
+      PSQL_PASSWORD: chat-service
     cmds:
       - echo "- Integration tests"
       - go test -tags integration -count 1 -race ./...
@@ -121,7 +130,7 @@ tasks:
 
   ent:gen:
     cmds:
-      - ent generate {{.ENT_SCHEMA}}
+      - ent generate {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
       - task: tidy
 
   ent:atlas:

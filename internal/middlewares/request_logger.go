@@ -1,18 +1,28 @@
 package middlewares
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
+
+	"github.com/Slava02/ChatSupport/internal/errors"
 )
 
-func NewRequestLogger(lg *zap.Logger) echo.MiddlewareFunc {
+// NewLogging returns a middleware that logs incoming requests with specific details.
+func NewLogging(lg *zap.Logger) echo.MiddlewareFunc {
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		Skipper: func(c echo.Context) bool {
-			return c.Request().Method == http.MethodOptions
+		Skipper: func(eCtx echo.Context) bool {
+			return eCtx.Request().Method == echo.OPTIONS
 		},
+		LogLatency:   true,
+		LogRemoteIP:  true,
+		LogHost:      true,
+		LogMethod:    true,
+		LogURI:       true,
+		LogRequestID: true,
+		LogUserAgent: true,
+		LogStatus:    true,
+		LogError:     true,
 		LogValuesFunc: func(eCtx echo.Context, v middleware.RequestLoggerValues) error {
 			lg := lg.With(
 				zap.Duration("latency", v.Latency),
@@ -22,20 +32,25 @@ func NewRequestLogger(lg *zap.Logger) echo.MiddlewareFunc {
 				zap.String("path", v.URIPath),
 				zap.String("request_id", v.RequestID),
 				zap.String("user_agent", v.UserAgent),
-				zap.Int("status", v.Status),
 			)
 
 			uid, _ := userID(eCtx)
 			lg = lg.With(zap.Stringer("user_id", uid))
 
+			status := errors.GetServerErrorCode(v.Error)
+
 			if err := v.Error; err != nil {
 				lg = lg.With(zap.Error(err))
 			}
 
-			switch s := v.Status; {
-			case s >= 500:
+			lg = lg.With(zap.Int("status", status))
+
+			switch {
+			case status >= 1000:
+				lg.Error("business logic error")
+			case status >= 500:
 				lg.Error("server error")
-			case s >= 400:
+			case status >= 400:
 				lg.Error("client error")
 			default:
 				lg.Info("success")
@@ -43,14 +58,5 @@ func NewRequestLogger(lg *zap.Logger) echo.MiddlewareFunc {
 
 			return nil
 		},
-		LogLatency:   true,
-		LogRemoteIP:  true,
-		LogHost:      true,
-		LogMethod:    true,
-		LogURIPath:   true,
-		LogRequestID: true,
-		LogUserAgent: true,
-		LogStatus:    true,
-		LogError:     true,
 	})
 }
