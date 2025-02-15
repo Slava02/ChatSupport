@@ -170,7 +170,6 @@ func ByProblemField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProblemStep(), sql.OrderByField(field, opts...))
 	}
 }
-
 func newChatStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -178,7 +177,6 @@ func newChatStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ChatTable, ChatColumn),
 	)
 }
-
 func newProblemStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),

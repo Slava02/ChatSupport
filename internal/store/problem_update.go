@@ -85,26 +85,6 @@ func (pu *ProblemUpdate) ClearResolvedAt() *ProblemUpdate {
 	return pu
 }
 
-// SetResolveRequestID sets the "resolve_request_id" field.
-func (pu *ProblemUpdate) SetResolveRequestID(ti types.RequestID) *ProblemUpdate {
-	pu.mutation.SetResolveRequestID(ti)
-	return pu
-}
-
-// SetNillableResolveRequestID sets the "resolve_request_id" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableResolveRequestID(ti *types.RequestID) *ProblemUpdate {
-	if ti != nil {
-		pu.SetResolveRequestID(*ti)
-	}
-	return pu
-}
-
-// ClearResolveRequestID clears the value of the "resolve_request_id" field.
-func (pu *ProblemUpdate) ClearResolveRequestID() *ProblemUpdate {
-	pu.mutation.ClearResolveRequestID()
-	return pu
-}
-
 // SetChat sets the "chat" edge to the Chat entity.
 func (pu *ProblemUpdate) SetChat(c *Chat) *ProblemUpdate {
 	return pu.SetChatID(c.ID)
@@ -196,11 +176,6 @@ func (pu *ProblemUpdate) check() error {
 			return &ValidationError{Name: "manager_id", err: fmt.Errorf(`store: validator failed for field "Problem.manager_id": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.ResolveRequestID(); ok {
-		if err := v.Validate(); err != nil {
-			return &ValidationError{Name: "resolve_request_id", err: fmt.Errorf(`store: validator failed for field "Problem.resolve_request_id": %w`, err)}
-		}
-	}
 	if pu.mutation.ChatCleared() && len(pu.mutation.ChatIDs()) > 0 {
 		return errors.New(`store: clearing a required unique edge "Problem.chat"`)
 	}
@@ -230,12 +205,6 @@ func (pu *ProblemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.ResolvedAtCleared() {
 		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
-	}
-	if value, ok := pu.mutation.ResolveRequestID(); ok {
-		_spec.SetField(problem.FieldResolveRequestID, field.TypeUUID, value)
-	}
-	if pu.mutation.ResolveRequestIDCleared() {
-		_spec.ClearField(problem.FieldResolveRequestID, field.TypeUUID)
 	}
 	if pu.mutation.ChatCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -385,26 +354,6 @@ func (puo *ProblemUpdateOne) ClearResolvedAt() *ProblemUpdateOne {
 	return puo
 }
 
-// SetResolveRequestID sets the "resolve_request_id" field.
-func (puo *ProblemUpdateOne) SetResolveRequestID(ti types.RequestID) *ProblemUpdateOne {
-	puo.mutation.SetResolveRequestID(ti)
-	return puo
-}
-
-// SetNillableResolveRequestID sets the "resolve_request_id" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableResolveRequestID(ti *types.RequestID) *ProblemUpdateOne {
-	if ti != nil {
-		puo.SetResolveRequestID(*ti)
-	}
-	return puo
-}
-
-// ClearResolveRequestID clears the value of the "resolve_request_id" field.
-func (puo *ProblemUpdateOne) ClearResolveRequestID() *ProblemUpdateOne {
-	puo.mutation.ClearResolveRequestID()
-	return puo
-}
-
 // SetChat sets the "chat" edge to the Chat entity.
 func (puo *ProblemUpdateOne) SetChat(c *Chat) *ProblemUpdateOne {
 	return puo.SetChatID(c.ID)
@@ -509,11 +458,6 @@ func (puo *ProblemUpdateOne) check() error {
 			return &ValidationError{Name: "manager_id", err: fmt.Errorf(`store: validator failed for field "Problem.manager_id": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.ResolveRequestID(); ok {
-		if err := v.Validate(); err != nil {
-			return &ValidationError{Name: "resolve_request_id", err: fmt.Errorf(`store: validator failed for field "Problem.resolve_request_id": %w`, err)}
-		}
-	}
 	if puo.mutation.ChatCleared() && len(puo.mutation.ChatIDs()) > 0 {
 		return errors.New(`store: clearing a required unique edge "Problem.chat"`)
 	}
@@ -560,12 +504,6 @@ func (puo *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err e
 	}
 	if puo.mutation.ResolvedAtCleared() {
 		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
-	}
-	if value, ok := puo.mutation.ResolveRequestID(); ok {
-		_spec.SetField(problem.FieldResolveRequestID, field.TypeUUID, value)
-	}
-	if puo.mutation.ResolveRequestIDCleared() {
-		_spec.ClearField(problem.FieldResolveRequestID, field.TypeUUID)
 	}
 	if puo.mutation.ChatCleared() {
 		edge := &sqlgraph.EdgeSpec{

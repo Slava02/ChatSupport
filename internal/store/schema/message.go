@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -30,18 +28,20 @@ func (Message) Fields() []ent.Field {
 		field.Time("checked_at").Optional(),
 		field.Bool("is_blocked").Default(false),
 		field.Bool("is_service").Default(false).Immutable(),
-		field.Time("created_at").Default(time.Now).Immutable(),
+		newCreatedAtField(),
 	}
 }
 
 // Edges of the Message.
 func (Message) Edges() []ent.Edge {
 	return []ent.Edge{
+		// The message has one chat.
 		edge.From("chat", Chat.Type).
 			Ref("messages").
 			Field("chat_id").
 			Required().Unique(),
 
+		// The message has one problem.
 		edge.From("problem", Problem.Type).
 			Ref("messages").
 			Field("problem_id").

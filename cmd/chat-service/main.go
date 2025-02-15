@@ -9,20 +9,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/config"
 	"github.com/Slava02/ChatSupport/internal/logger"
-	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
-	"github.com/Slava02/ChatSupport/internal/store"
 )
 
 var configPath = flag.String("config", "configs/config.toml", "Path to config file")
-
-const prod = true
 
 func main() {
 	if err := run(); err != nil {
@@ -41,73 +38,62 @@ func run() (errReturned error) {
 		return fmt.Errorf("parse and validate config %q: %v", *configPath, err)
 	}
 
-	logger.MustInit(
-		logger.NewOptions(cfg.Log.Level,
-			logger.WithSentryDSN(cfg.Sentry.DSN),
-			logger.WithEnv(cfg.Global.Env),
-			logger.WithSentryDSN(cfg.Sentry.DSN),
-		))
+	if err := logger.Init(logger.NewOptions(
+		cfg.Log.Level,
+		logger.WithProductionMode(cfg.Global.IsProduction()),
+		logger.WithSentryDSN(cfg.Sentry.DSN),
+		logger.WithSentryEnv(cfg.Global.Env),
+	)); err != nil {
+		return fmt.Errorf("init logger: %v", err)
+	}
 	defer logger.Sync()
 
-	clientv1Swagger, err := clientv1.GetSwagger()
-	if err != nil {
-		return fmt.Errorf("get swagger: %v", err)
-	}
-
+	// Clients.
 	kc, err := keycloakclient.New(keycloakclient.NewOptions(
 		cfg.Clients.Keycloak.BasePath,
 		cfg.Clients.Keycloak.Realm,
 		cfg.Clients.Keycloak.ClientID,
 		cfg.Clients.Keycloak.ClientSecret,
+		keycloakclient.WithDebugMode(cfg.Clients.Keycloak.DebugMode),
 	))
 	if err != nil {
-		return fmt.Errorf("failed to init keycloak client: %v", err)
+		return fmt.Errorf("create keycloak client: %v", err)
+	}
+	if cfg.Global.IsProduction() && cfg.Clients.Keycloak.DebugMode {
+		zap.L().Warn("keycloak client in the debug mode")
 	}
 
-	storage, err := store.NewPSQLClient(store.NewPSQLOptions(
-		cfg.Stores.PSQL.Address,
-		cfg.Stores.PSQL.Username,
-		cfg.Stores.PSQL.Password,
-		cfg.Stores.PSQL.Database,
-		store.WithDebug(cfg.Stores.PSQL.Debug),
-	))
+	// Servers.
+	clientV1Swagger, err := clientv1.GetSwagger()
 	if err != nil {
-		return fmt.Errorf("create store client: %v", err)
-	}
-
-	if err = storage.Schema.Create(ctx); err != nil {
-		return fmt.Errorf("failed creating schema resources: %v", err)
-	}
-
-	msgRepo, err := messagesrepo.New(messagesrepo.NewOptions(store.NewDatabase(storage)))
-	if err != nil {
-		return fmt.Errorf("failed initializing schema: %v", err)
-	}
-
-	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
-	if err != nil {
-		return fmt.Errorf("init debug server: %v", err)
+		return fmt.Errorf("get client v1 swagger: %v", err)
 	}
 
 	srvClient, err := initServerClient(
-		prod,
 		cfg.Servers.Client.Addr,
 		cfg.Servers.Client.AllowOrigins,
-		clientv1Swagger,
+		clientV1Swagger,
 		kc,
-		cfg.Servers.Client.Access.Role,
-		cfg.Servers.Client.Access.Resource,
-		msgRepo,
+		cfg.Servers.Client.RequiredAccess.Resource,
+		cfg.Servers.Client.RequiredAccess.Role,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to init client server: %v", err)
+		return fmt.Errorf("init client server: %v", err)
+	}
+
+	srvDebug, err := serverdebug.New(serverdebug.NewOptions(
+		cfg.Servers.Debug.Addr,
+		clientV1Swagger,
+	))
+	if err != nil {
+		return fmt.Errorf("init debug server: %v", err)
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// Run servers.
-	eg.Go(func() error { return srvDebug.Run(ctx) })
 	eg.Go(func() error { return srvClient.Run(ctx) })
+	eg.Go(func() error { return srvDebug.Run(ctx) })
 
 	// Run services.
 	// Ждут своего часа.

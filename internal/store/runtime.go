@@ -73,7 +73,7 @@ func init() {
 	problemFields := schema.Problem{}.Fields()
 	_ = problemFields
 	// problemDescCreatedAt is the schema descriptor for created_at field.
-	problemDescCreatedAt := problemFields[5].Descriptor()
+	problemDescCreatedAt := problemFields[4].Descriptor()
 	// problem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	problem.DefaultCreatedAt = problemDescCreatedAt.Default.(func() time.Time)
 	// problemDescID is the schema descriptor for id field.

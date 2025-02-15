@@ -26,12 +26,19 @@ vars:
 
   DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
 
+  ENT_SCHEMA: ./internal/store/schema
+
   KEYCLOAK_REALM_PATH: ./deploy/local/bank-realm.json
+
+  CLIENT_V1_SRC: ./api/client.v1.swagger.yml
+  CLIENT_V1_DST: ./internal/server-client/v1/server.gen.go
+  CLIENT_V1_PKG: clientv1
 
   TYPES: |
     ChatID
     MessageID
     ProblemID
+    RequestID
     UserID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
@@ -109,19 +116,19 @@ tasks:
 
   ent:new:
     cmds:
-      - ent new --target ./internal/store/schema {{.CLI_ARGS}}
+      - ent new --target {{.ENT_SCHEMA}} {{.CLI_ARGS}}
       - task: tidy
 
   ent:gen:
     cmds:
-      - ent generate ./internal/store/schema --template ./internal/store/templates
+      - ent generate {{.ENT_SCHEMA}}
       - task: tidy
 
   ent:atlas:
     cmds:
       - |
         atlas schema inspect \
-        -u "ent://internal/store/schema" \
+        -u "ent://{{.ENT_SCHEMA}}" \
         --dev-url "sqlite://file?mode=memory&_fk=1" \
         -w
 
@@ -132,12 +139,9 @@ tasks:
 
   gen:api:
     cmds:
-      - task: gen:client
-
-  gen:client:
-    cmds:
       - echo "Generate client server..."
-      - oapi-codegen -old-config-style -generate skip-prune,types,server,spec -package clientv1 api/client.v1.swagger.yml > internal/server-client/v1/server.gen.go
+      - oapi-codegen --old-config-style -generate types,server,spec -package {{.CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.CLIENT_V1_DST}}
+      - task: tidy
 
   deps:
     cmds:
@@ -192,8 +196,10 @@ tasks:
       - "{{.DOCKER_COMPOSE_CMD}} up -d {{.SERVICE}}"
 
   kc:export:
-    # https://www.keycloak.org/server/importExport
     cmds:
+      - # https://www.keycloak.org/server/importExport
+      - echo "Dump Keycloak Bank realm..."
       - cmd: docker exec -it local-keycloak-1 /opt/keycloak/bin/kc.sh export --users realm_file --file /tmp/bank-realm.json --realm Bank
         ignore_error: true
       - docker cp local-keycloak-1:/tmp/bank-realm.json {{.KEYCLOAK_REALM_PATH}}
+      - echo "Exported in {{.KEYCLOAK_REALM_PATH}}"

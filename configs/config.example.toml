@@ -2,35 +2,27 @@
 env = "dev"
 
 [log]
-level = "debug"
+level = "info"
 
 [sentry]
+# Disabled if empty. Take it from "Settings/sentry/<project>/Client Keys".
 dsn = ""
 
 [servers]
+[servers.debug]
+addr = ":8079"
+
 [servers.client]
 addr = ":8080"
 allow_origins = ["http://localhost:3011", "http://localhost:3000"]
 [servers.client.required_access]
 resource = "chat-ui-client"
 role = "support-chat-client"
-[servers.debug]
-addr = ":8079"
 
 [clients]
 [clients.keycloak]
 base_path = "http://localhost:3010"
 realm = "Bank"
 client_id = "chat-service"
-client_secret = "подставьте-свой-секрет"
+client_secret = "DJgU5KNPUWoJw9M9XSj1QYW3pbPfsR1s"
 debug_mode = false
-
-[stores]
-[stores.psql]
-address = "127.0.0.1:5432"
-username = "chat-service"
-password = "chat-service"
-database = "chat-service"
-debug = false
-
-

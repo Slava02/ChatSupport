@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-resty/resty/v2"
 
@@ -16,14 +16,14 @@ import (
 type IntrospectTokenResult struct {
 	Exp    int           `json:"exp"`
 	Iat    int           `json:"iat"`
-	Aud    SliceOrString `json:"aud"`
+	Aud    StringOrSlice `json:"aud"`
 	Active bool          `json:"active"`
 }
 
 // IntrospectToken implements
 // https://www.keycloak.org/docs/latest/authorization_services/index.html#obtaining-information-about-an-rpt
 func (c *Client) IntrospectToken(ctx context.Context, token string) (*IntrospectTokenResult, error) {
-	url := fmt.Sprintf("realms/%s/protocol/openid-connect/token/introspect", c.keyCloakRealm)
+	url := fmt.Sprintf("realms/%s/protocol/openid-connect/token/introspect", c.realm)
 
 	var result IntrospectTokenResult
 
@@ -38,7 +38,6 @@ func (c *Client) IntrospectToken(ctx context.Context, token string) (*Introspect
 	if err != nil {
 		return nil, fmt.Errorf("send request to keycloak: %v", err)
 	}
-
 	if resp.StatusCode() != http.StatusOK {
 		return nil, fmt.Errorf("errored keycloak response: %v", resp.Status())
 	}
@@ -47,33 +46,24 @@ func (c *Client) IntrospectToken(ctx context.Context, token string) (*Introspect
 }
 
 func (c *Client) auth(ctx context.Context) *resty.Request {
-	authStr := base64.StdEncoding.EncodeToString([]byte(c.keyCloakClientID + ":" + c.keyCloakClientSecret))
+	authStr := base64.StdEncoding.EncodeToString([]byte(c.clientID + ":" + c.clientSecret))
 	return c.cli.R().
 		SetContext(ctx).
 		SetAuthScheme("Basic").SetAuthToken(authStr).
 		SetHeader("User-Agent", "chat-service/"+buildinfo.Version())
 }
 
-type SliceOrString []string
+type StringOrSlice []string
 
-func (s *SliceOrString) UnmarshalJSON(data []byte) error {
-	if data == nil {
-		return errors.New("empty Aud")
-	}
-
-	// If it is an array type and has elements
-	if len(data) > 2 && data[0] == '[' {
+func (s *StringOrSlice) UnmarshalJSON(data []byte) error {
+	if len(data) > 1 && data[0] == '[' {
 		return json.Unmarshal(data, (*[]string)(s))
 	}
 
-	// Removing double quotes and casting it to string
-	var aud string
-	err := json.Unmarshal(data, &aud)
+	str, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("can't unmarshall aud: %v", err)
+		return err
 	}
-
-	*s = []string{aud}
-
+	*s = []string{str}
 	return nil
 }

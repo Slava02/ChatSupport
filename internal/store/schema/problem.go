@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -22,19 +20,20 @@ func (Problem) Fields() []ent.Field {
 		field.UUID("chat_id", types.ChatID{}),
 		field.UUID("manager_id", types.UserID{}).Optional(),
 		field.Time("resolved_at").Optional(),
-		field.UUID("resolve_request_id", types.RequestID{}).Optional().Unique(),
-		field.Time("created_at").Default(time.Now).Immutable(),
+		newCreatedAtField(),
 	}
 }
 
 // Edges of the Problem.
 func (Problem) Edges() []ent.Edge {
 	return []ent.Edge{
+		// The problem has one chat.
 		edge.From("chat", Chat.Type).
 			Ref("problems").
 			Field("chat_id").
 			Required().Unique(),
 
+		// The problem has many messages.
 		edge.To("messages", Message.Type),
 	}
 }

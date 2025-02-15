@@ -57,20 +57,6 @@ func (pc *ProblemCreate) SetNillableResolvedAt(t *time.Time) *ProblemCreate {
 	return pc
 }
 
-// SetResolveRequestID sets the "resolve_request_id" field.
-func (pc *ProblemCreate) SetResolveRequestID(ti types.RequestID) *ProblemCreate {
-	pc.mutation.SetResolveRequestID(ti)
-	return pc
-}
-
-// SetNillableResolveRequestID sets the "resolve_request_id" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableResolveRequestID(ti *types.RequestID) *ProblemCreate {
-	if ti != nil {
-		pc.SetResolveRequestID(*ti)
-	}
-	return pc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (pc *ProblemCreate) SetCreatedAt(t time.Time) *ProblemCreate {
 	pc.mutation.SetCreatedAt(t)
@@ -179,11 +165,6 @@ func (pc *ProblemCreate) check() error {
 			return &ValidationError{Name: "manager_id", err: fmt.Errorf(`store: validator failed for field "Problem.manager_id": %w`, err)}
 		}
 	}
-	if v, ok := pc.mutation.ResolveRequestID(); ok {
-		if err := v.Validate(); err != nil {
-			return &ValidationError{Name: "resolve_request_id", err: fmt.Errorf(`store: validator failed for field "Problem.resolve_request_id": %w`, err)}
-		}
-	}
 	if _, ok := pc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`store: missing required field "Problem.created_at"`)}
 	}
@@ -237,10 +218,6 @@ func (pc *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.ResolvedAt(); ok {
 		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
-	}
-	if value, ok := pc.mutation.ResolveRequestID(); ok {
-		_spec.SetField(problem.FieldResolveRequestID, field.TypeUUID, value)
-		_node.ResolveRequestID = value
 	}
 	if value, ok := pc.mutation.CreatedAt(); ok {
 		_spec.SetField(problem.FieldCreatedAt, field.TypeTime, value)

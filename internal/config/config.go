@@ -3,64 +3,55 @@ package config
 type Config struct {
 	Global  GlobalConfig  `toml:"global"`
 	Log     LogConfig     `toml:"log"`
-	Servers ServersConfig `toml:"servers"`
 	Sentry  SentryConfig  `toml:"sentry"`
-	Clients Clients       `toml:"clients"`
-	Stores  Stores        `toml:"stores"`
+	Servers ServersConfig `toml:"servers"`
+	Clients ClientsConfig `toml:"clients"`
 }
 
 type GlobalConfig struct {
 	Env string `toml:"env" validate:"required,oneof=dev stage prod"`
 }
 
+func (c GlobalConfig) IsProduction() bool {
+	return c.Env == "prod"
+}
+
 type LogConfig struct {
 	Level string `toml:"level" validate:"required,oneof=debug info warn error"`
-}
-
-type ServersConfig struct {
-	Debug  DebugServerConfig  `toml:"debug"`
-	Client ClientServerConfig `toml:"client"`
-}
-
-type DebugServerConfig struct {
-	Addr string `toml:"addr" validate:"required,hostname_port"`
-}
-
-type ClientServerConfig struct {
-	Addr         string         `toml:"addr" validate:"required,hostname_port"`
-	AllowOrigins []string       `toml:"allow_origins" validate:"required,dive,url"`
-	Access       RequiredAccess `toml:"required_access" validate:"required"`
-}
-
-type RequiredAccess struct {
-	Resource string `toml:"resource" validate:"required"`
-	Role     string `toml:"role" validate:"required"`
 }
 
 type SentryConfig struct {
 	DSN string `toml:"dsn" validate:"omitempty,url"`
 }
 
-type Clients struct {
-	Keycloak `toml:"keycloak"`
+type ServersConfig struct {
+	Debug  DebugServerConfig `toml:"debug"`
+	Client APIServerConfig   `toml:"client"`
 }
 
-type Keycloak struct {
+type DebugServerConfig struct {
+	Addr string `toml:"addr" validate:"required,hostname_port"`
+}
+
+type APIServerConfig struct {
+	Addr           string               `toml:"addr" validate:"required,hostname_port"`
+	AllowOrigins   []string             `toml:"allow_origins" validate:"required"`
+	RequiredAccess RequiredAccessConfig `toml:"required_access"`
+}
+
+type RequiredAccessConfig struct {
+	Resource string `toml:"resource" validate:"required"`
+	Role     string `toml:"role" validate:"required"`
+}
+
+type ClientsConfig struct {
+	Keycloak KeycloakConfig `toml:"keycloak"`
+}
+
+type KeycloakConfig struct {
 	BasePath     string `toml:"base_path" validate:"required,url"`
-	Realm        string `tom:"realm" validate:"required"`
+	Realm        string `toml:"realm" validate:"required"`
 	ClientID     string `toml:"client_id" validate:"required"`
-	ClientSecret string `toml:"client_secret" validate:"required"`
-	DebugMode    bool   `toml:"debug_mode" default:"false" validate:"omitempty"`
-}
-
-type Stores struct {
-	PSQL PSQL `toml:"psql"`
-}
-
-type PSQL struct {
-	Address  string `toml:"address" validate:"required,hostname_port"`
-	Username string `toml:"username" validate:"required"`
-	Password string `toml:"password" validate:"required"`
-	Database string `toml:"database" validate:"required"`
-	Debug    bool   `toml:"debug" validate:"omitempty"`
+	ClientSecret string `toml:"client_secret" validate:"required,alphanum"`
+	DebugMode    bool   `toml:"debug_mode"`
 }

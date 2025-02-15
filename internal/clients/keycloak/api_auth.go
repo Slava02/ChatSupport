@@ -20,7 +20,7 @@ type RPT struct {
 }
 
 func (c *Client) Auth(ctx context.Context, username, password string) (*RPT, error) {
-	url := fmt.Sprintf("realms/%s/protocol/openid-connect/token", c.keyCloakRealm)
+	url := fmt.Sprintf("realms/%s/protocol/openid-connect/token", c.realm)
 
 	var token RPT
 

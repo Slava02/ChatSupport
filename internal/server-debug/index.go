@@ -4,7 +4,8 @@ import (
 	"html/template"
 
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
+
+	"github.com/Slava02/ChatSupport/internal/logger"
 )
 
 type page struct {
@@ -21,15 +22,11 @@ func newIndexPage() *indexPage {
 }
 
 func (i *indexPage) addPage(path string, description string) {
-	i.pages = append(i.pages, page{
-		Path:        path,
-		Description: description,
-	})
+	i.pages = append(i.pages, page{Path: path, Description: description})
 }
 
 func (i indexPage) handler(eCtx echo.Context) error {
-	return template.Must(template.New("index").Parse(`
-<html>
+	return template.Must(template.New("index").Parse(`<html>
 	<title>Chat Service Debug</title>
 <body>
 	<h2>Chat Service Debug</h2>
@@ -67,6 +64,6 @@ func (i indexPage) handler(eCtx echo.Context) error {
 		LogLevel string
 	}{
 		Pages:    i.pages,
-		LogLevel: zap.L().Level().String(),
+		LogLevel: logger.Level.String(),
 	})
 }

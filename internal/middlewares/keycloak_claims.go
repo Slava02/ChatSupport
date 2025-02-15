@@ -16,13 +16,9 @@ var (
 
 type claims struct {
 	jwt.StandardClaims
-	ResourceAccess resourceAccess               `json:"resource_access"`
-	Subject        types.UserID                 `json:"sub,omitempty"`
-	Audience       keycloakclient.SliceOrString `json:"aud,omitempty"`
-}
-
-type resourceAccess map[string]struct {
-	Roles []string `json:"roles"`
+	Audience        keycloakclient.StringOrSlice `json:"aud,omitempty"`
+	Subject         types.UserID                 `json:"sub,omitempty"`
+	ResourcesAccess resourceAccess               `json:"resource_access"`
 }
 
 // Valid returns errors:
@@ -34,7 +30,7 @@ func (c claims) Valid() error {
 		return err
 	}
 
-	if len(c.ResourceAccess) == 0 {
+	if len(c.ResourcesAccess) == 0 {
 		return ErrNoAllowedResources
 	}
 
@@ -47,6 +43,10 @@ func (c claims) Valid() error {
 
 func (c claims) UserID() types.UserID {
 	return c.Subject
+}
+
+type resourceAccess map[string]struct {
+	Roles []string `json:"roles"`
 }
 
 func (ra resourceAccess) HasResourceRole(resource, role string) bool {
