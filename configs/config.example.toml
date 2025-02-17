@@ -1,4 +1,5 @@
 [global]
+name = "chat-service"
 env = "dev"
 
 [log]
@@ -8,6 +9,10 @@ level = "info"
 # Disabled if empty. Take it from "Settings/sentry/<project>/Client Keys".
 dsn = ""
 
+[tracing]
+enabled = true
+agent_addr = "localhost:6831"
+
 [servers]
 [servers.debug]
 addr = ":8079"
@@ -15,14 +20,61 @@ addr = ":8079"
 [servers.client]
 addr = ":8080"
 allow_origins = ["http://localhost:3011", "http://localhost:3000"]
+sec_ws_protocol = "chat-service-protocol"
 [servers.client.required_access]
 resource = "chat-ui-client"
 role = "support-chat-client"
+
+[servers.manager]
+addr = ":8081"
+allow_origins = ["http://localhost:3011", "http://localhost:3001"]
+sec_ws_protocol = "chat-service-protocol"
+[servers.manager.required_access]
+resource = "chat-ui-manager"
+role = "support-chat-manager"
+
+[stores]
+use = "psql" # "sqlite", "psql"
+[stores.sqlite]
+# No conf.
+[stores.psql]
+address = "127.0.0.1:5432"
+username = "chat-service"
+password = "chat-service"
+database = "chat-service"
+debug = false
 
 [clients]
 [clients.keycloak]
 base_path = "http://localhost:3010"
 realm = "Bank"
 client_id = "chat-service"
-client_secret = "DJgU5KNPUWoJw9M9XSj1QYW3pbPfsR1s"
+client_secret = "ML1Vyk8BzUarI7bNclfbMSvlSbaPayT0"
 debug_mode = false
+
+[services]
+[services.manager_load]
+max_problems_at_same_time = 5
+
+[services.manager_scheduler]
+period = "1s"
+
+[services.msg_producer]
+brokers = ["localhost:9092"]
+topic = "chat.messages"
+batch_size = 1
+encrypt_key = ""
+
+[services.outbox]
+workers = 2
+idle_time = "1s"
+reserve_for = "30s"
+
+[services.afc_verdicts_processor]
+brokers = ["localhost:9092"]
+consumers = 4
+consumer_group = "chat-service"
+batch_size = 1
+verdicts_topic = "afc.msg-verdicts"
+verdicts_dlq_topic = "afc.msg-verdicts.dlq"
+verdicts_signing_public_key = ""

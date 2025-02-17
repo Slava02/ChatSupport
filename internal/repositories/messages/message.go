@@ -1,9 +1,10 @@
 package messagesrepo
 
 import (
+	"time"
+
 	"github.com/Slava02/ChatSupport/internal/store"
 	"github.com/Slava02/ChatSupport/internal/types"
-	"time"
 )
 
 type Message struct {

@@ -179,7 +179,7 @@ func (s *UseCaseSuite) TestGetClientChatMessages_Success_SinglePage() {
 		s.Equal(expectedMsgs[i].IsService, resp.Messages[i].IsService)
 	}
 
-	s.T().Run("msg received flag logic", func(t *testing.T) {
+	s.T().Run("msg received flag logic", func(t *testing.T) { //nolint:testifylint // it works properly
 		assert.False(t, resp.Messages[0].IsReceived)
 		assert.True(t, resp.Messages[1].IsReceived)
 		assert.False(t, resp.Messages[2].IsReceived)

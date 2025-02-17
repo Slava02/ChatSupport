@@ -46,7 +46,7 @@ func New(opts Options) (*Server, error) {
 	e := echo.New()
 	e.Use(
 		middleware.Recover(),
-		middlewares.NewRequestLogger(lg),
+		middlewares.NewLogging(lg),
 	)
 
 	s := &Server{

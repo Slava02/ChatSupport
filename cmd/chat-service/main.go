@@ -9,15 +9,21 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/config"
 	"github.com/Slava02/ChatSupport/internal/logger"
+	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
+	"github.com/Slava02/ChatSupport/internal/server-client/errhandler"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
+	"github.com/Slava02/ChatSupport/internal/store"
 )
+
+const nameMain = "main"
 
 var configPath = flag.String("config", "configs/config.toml", "Path to config file")
 
@@ -46,7 +52,40 @@ func run() (errReturned error) {
 	)); err != nil {
 		return fmt.Errorf("init logger: %v", err)
 	}
+
 	defer logger.Sync()
+
+	lg := zap.L().Named(nameMain)
+
+	// Storage.
+	if cfg.Global.IsProduction() && cfg.Stores.PSQL.Debug {
+		lg.Warn("psql client in the debug mode")
+	}
+
+	storage, err := store.NewPSQLClient(store.NewPSQLOptions(
+		cfg.Stores.PSQL.Addr,
+		cfg.Stores.PSQL.Username,
+		cfg.Stores.PSQL.Password,
+		cfg.Stores.PSQL.Database,
+		store.WithDebug(cfg.Stores.PSQL.Debug),
+	))
+	if err != nil {
+		return fmt.Errorf("create store client: %v", err)
+	}
+	defer multierr.AppendInvoke(&errReturned, multierr.Close(storage))
+
+	// Migrations.
+	if err = storage.Schema.Create(ctx); err != nil {
+		return fmt.Errorf("migrate: %v", err)
+	}
+
+	// Repositories.
+	db := store.NewDatabase(storage)
+
+	msgRepo, err := messagesrepo.New(messagesrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("messages repo: %v", err)
+	}
 
 	// Clients.
 	kc, err := keycloakclient.New(keycloakclient.NewOptions(
@@ -69,13 +108,24 @@ func run() (errReturned error) {
 		return fmt.Errorf("get client v1 swagger: %v", err)
 	}
 
+	errHandler, err := errhandler.New(errhandler.NewOptions(
+		lg,
+		cfg.Global.IsProduction(),
+		errhandler.ResponseBuilder,
+	))
+	if err != nil {
+		return fmt.Errorf("init error handler: %v", err)
+	}
+
 	srvClient, err := initServerClient(
 		cfg.Servers.Client.Addr,
 		cfg.Servers.Client.AllowOrigins,
 		clientV1Swagger,
+		*msgRepo,
 		kc,
 		cfg.Servers.Client.RequiredAccess.Resource,
 		cfg.Servers.Client.RequiredAccess.Role,
+		errHandler.Handle,
 	)
 	if err != nil {
 		return fmt.Errorf("init client server: %v", err)

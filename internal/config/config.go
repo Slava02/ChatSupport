@@ -6,6 +6,7 @@ type Config struct {
 	Sentry  SentryConfig  `toml:"sentry"`
 	Servers ServersConfig `toml:"servers"`
 	Clients ClientsConfig `toml:"clients"`
+	Stores  Stores        `toml:"stores"`
 }
 
 type GlobalConfig struct {
@@ -61,7 +62,7 @@ type Stores struct {
 }
 
 type PSQL struct {
-	Address  string `toml:"address" validate:"required,hostname_port"`
+	Addr     string `toml:"addr" validate:"required,hostname_port"`
 	Username string `toml:"username" validate:"required"`
 	Password string `toml:"password" validate:"required"`
 	Database string `toml:"database" validate:"required"`

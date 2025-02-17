@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
+	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
 	serverclient "github.com/Slava02/ChatSupport/internal/server-client"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
+	gethistoryUC "github.com/Slava02/ChatSupport/internal/usecases/client/get-history"
 )
 
 const nameServerClient = "server-client"
@@ -17,14 +20,20 @@ func initServerClient(
 	addr string,
 	allowOrigins []string,
 	v1Swagger *openapi3.T,
-
+	messageRepo messagesrepo.Repo,
 	keycloak *keycloakclient.Client,
 	requiredResource string,
 	requiredRole string,
+	errHandler echo.HTTPErrorHandler,
 ) (*serverclient.Server, error) {
 	lg := zap.L().Named(nameServerClient)
 
-	v1Handlers, err := clientv1.NewHandlers(clientv1.NewOptions(lg))
+	getHistoryUseCase, err := gethistoryUC.New(gethistoryUC.NewOptions(&messageRepo))
+	if err != nil {
+		return nil, fmt.Errorf("create get-history use case: %v", err)
+	}
+
+	v1Handlers, err := clientv1.NewHandlers(clientv1.NewOptions(getHistoryUseCase))
 	if err != nil {
 		return nil, fmt.Errorf("create v1 handlers: %v", err)
 	}
@@ -33,11 +42,12 @@ func initServerClient(
 		lg,
 		addr,
 		allowOrigins,
+		v1Swagger,
+		v1Handlers,
 		keycloak,
 		requiredResource,
 		requiredRole,
-		v1Swagger,
-		v1Handlers,
+		errHandler,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("build server: %v", err)

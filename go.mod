@@ -22,6 +22,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tchap/zapext/v2 v2.1.1
 	go.uber.org/mock v0.5.0
+	go.uber.org/multierr v1.10.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.10.0
 )
@@ -59,7 +60,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.31.0 // indirect
