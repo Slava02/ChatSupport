@@ -71,7 +71,7 @@ func newChatMutation(c config, op Op, opts ...chatOption) *ChatMutation {
 	return m
 }
 
-// withChatID sets the ID field of the mutation.
+// withChatID sets the MessageID field of the mutation.
 func withChatID(id types.ChatID) chatOption {
 	return func(m *ChatMutation) {
 		var (
@@ -178,7 +178,7 @@ func (m *ChatMutation) OldClientID(ctx context.Context) (v types.UserID, err err
 		return v, errors.New("OldClientID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldClientID requires an ID field in the mutation")
+		return v, errors.New("OldClientID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -214,7 +214,7 @@ func (m *ChatMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+		return v, errors.New("OldCreatedAt requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -607,6 +607,7 @@ type MessageMutation struct {
 	checked_at             *time.Time
 	is_blocked             *bool
 	is_service             *bool
+	initial_request_id     *types.RequestID
 	created_at             *time.Time
 	clearedFields          map[string]struct{}
 	chat                   *types.ChatID
@@ -637,7 +638,7 @@ func newMessageMutation(c config, op Op, opts ...messageOption) *MessageMutation
 	return m
 }
 
-// withMessageID sets the ID field of the mutation.
+// withMessageID sets the MessageID field of the mutation.
 func withMessageID(id types.MessageID) messageOption {
 	return func(m *MessageMutation) {
 		var (
@@ -744,7 +745,7 @@ func (m *MessageMutation) OldChatID(ctx context.Context) (v types.ChatID, err er
 		return v, errors.New("OldChatID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldChatID requires an ID field in the mutation")
+		return v, errors.New("OldChatID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -780,7 +781,7 @@ func (m *MessageMutation) OldProblemID(ctx context.Context) (v types.ProblemID, 
 		return v, errors.New("OldProblemID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldProblemID requires an ID field in the mutation")
+		return v, errors.New("OldProblemID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -816,7 +817,7 @@ func (m *MessageMutation) OldAuthorID(ctx context.Context) (v types.UserID, err 
 		return v, errors.New("OldAuthorID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAuthorID requires an ID field in the mutation")
+		return v, errors.New("OldAuthorID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -865,7 +866,7 @@ func (m *MessageMutation) OldIsVisibleForClient(ctx context.Context) (v bool, er
 		return v, errors.New("OldIsVisibleForClient is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsVisibleForClient requires an ID field in the mutation")
+		return v, errors.New("OldIsVisibleForClient requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -901,7 +902,7 @@ func (m *MessageMutation) OldIsVisibleForManager(ctx context.Context) (v bool, e
 		return v, errors.New("OldIsVisibleForManager is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsVisibleForManager requires an ID field in the mutation")
+		return v, errors.New("OldIsVisibleForManager requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -937,7 +938,7 @@ func (m *MessageMutation) OldBody(ctx context.Context) (v string, err error) {
 		return v, errors.New("OldBody is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldBody requires an ID field in the mutation")
+		return v, errors.New("OldBody requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -973,7 +974,7 @@ func (m *MessageMutation) OldCheckedAt(ctx context.Context) (v time.Time, err er
 		return v, errors.New("OldCheckedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCheckedAt requires an ID field in the mutation")
+		return v, errors.New("OldCheckedAt requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1022,7 +1023,7 @@ func (m *MessageMutation) OldIsBlocked(ctx context.Context) (v bool, err error) 
 		return v, errors.New("OldIsBlocked is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsBlocked requires an ID field in the mutation")
+		return v, errors.New("OldIsBlocked requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1058,7 +1059,7 @@ func (m *MessageMutation) OldIsService(ctx context.Context) (v bool, err error) 
 		return v, errors.New("OldIsService is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsService requires an ID field in the mutation")
+		return v, errors.New("OldIsService requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1070,6 +1071,42 @@ func (m *MessageMutation) OldIsService(ctx context.Context) (v bool, err error) 
 // ResetIsService resets all changes to the "is_service" field.
 func (m *MessageMutation) ResetIsService() {
 	m.is_service = nil
+}
+
+// SetInitialRequestID sets the "initial_request_id" field.
+func (m *MessageMutation) SetInitialRequestID(ti types.RequestID) {
+	m.initial_request_id = &ti
+}
+
+// InitialRequestID returns the value of the "initial_request_id" field in the mutation.
+func (m *MessageMutation) InitialRequestID() (r types.RequestID, exists bool) {
+	v := m.initial_request_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInitialRequestID returns the old "initial_request_id" field's value of the Message entity.
+// If the Message object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MessageMutation) OldInitialRequestID(ctx context.Context) (v types.RequestID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInitialRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInitialRequestID requires an MessageID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInitialRequestID: %w", err)
+	}
+	return oldValue.InitialRequestID, nil
+}
+
+// ResetInitialRequestID resets all changes to the "initial_request_id" field.
+func (m *MessageMutation) ResetInitialRequestID() {
+	m.initial_request_id = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -1094,7 +1131,7 @@ func (m *MessageMutation) OldCreatedAt(ctx context.Context) (v time.Time, err er
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+		return v, errors.New("OldCreatedAt requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1196,7 +1233,7 @@ func (m *MessageMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MessageMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.chat != nil {
 		fields = append(fields, message.FieldChatID)
 	}
@@ -1223,6 +1260,9 @@ func (m *MessageMutation) Fields() []string {
 	}
 	if m.is_service != nil {
 		fields = append(fields, message.FieldIsService)
+	}
+	if m.initial_request_id != nil {
+		fields = append(fields, message.FieldInitialRequestID)
 	}
 	if m.created_at != nil {
 		fields = append(fields, message.FieldCreatedAt)
@@ -1253,6 +1293,8 @@ func (m *MessageMutation) Field(name string) (ent.Value, bool) {
 		return m.IsBlocked()
 	case message.FieldIsService:
 		return m.IsService()
+	case message.FieldInitialRequestID:
+		return m.InitialRequestID()
 	case message.FieldCreatedAt:
 		return m.CreatedAt()
 	}
@@ -1282,6 +1324,8 @@ func (m *MessageMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsBlocked(ctx)
 	case message.FieldIsService:
 		return m.OldIsService(ctx)
+	case message.FieldInitialRequestID:
+		return m.OldInitialRequestID(ctx)
 	case message.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	}
@@ -1355,6 +1399,13 @@ func (m *MessageMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsService(v)
+		return nil
+	case message.FieldInitialRequestID:
+		v, ok := value.(types.RequestID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInitialRequestID(v)
 		return nil
 	case message.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -1453,6 +1504,9 @@ func (m *MessageMutation) ResetField(name string) error {
 		return nil
 	case message.FieldIsService:
 		m.ResetIsService()
+		return nil
+	case message.FieldInitialRequestID:
+		m.ResetInitialRequestID()
 		return nil
 	case message.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -1592,7 +1646,7 @@ func newProblemMutation(c config, op Op, opts ...problemOption) *ProblemMutation
 	return m
 }
 
-// withProblemID sets the ID field of the mutation.
+// withProblemID sets the MessageID field of the mutation.
 func withProblemID(id types.ProblemID) problemOption {
 	return func(m *ProblemMutation) {
 		var (
@@ -1699,7 +1753,7 @@ func (m *ProblemMutation) OldChatID(ctx context.Context) (v types.ChatID, err er
 		return v, errors.New("OldChatID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldChatID requires an ID field in the mutation")
+		return v, errors.New("OldChatID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1735,7 +1789,7 @@ func (m *ProblemMutation) OldManagerID(ctx context.Context) (v types.UserID, err
 		return v, errors.New("OldManagerID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldManagerID requires an ID field in the mutation")
+		return v, errors.New("OldManagerID requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1784,7 +1838,7 @@ func (m *ProblemMutation) OldResolvedAt(ctx context.Context) (v time.Time, err e
 		return v, errors.New("OldResolvedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldResolvedAt requires an ID field in the mutation")
+		return v, errors.New("OldResolvedAt requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
@@ -1833,7 +1887,7 @@ func (m *ProblemMutation) OldCreatedAt(ctx context.Context) (v time.Time, err er
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+		return v, errors.New("OldCreatedAt requires an MessageID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {

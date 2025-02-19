@@ -4,25 +4,25 @@ go 1.23.3
 
 require (
 	entgo.io/ent v0.14.1
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.4.0
 	github.com/getkin/kin-openapi v0.128.0
 	github.com/getsentry/sentry-go v0.20.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/kazhuravlev/options-gen v0.33.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/oapi-codegen/echo-middleware v1.0.2
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tchap/zapext/v2 v2.1.1
 	go.uber.org/mock v0.5.0
-	go.uber.org/multierr v1.10.0
+	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.10.0
 )

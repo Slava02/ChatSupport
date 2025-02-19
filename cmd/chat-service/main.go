@@ -16,7 +16,9 @@ import (
 	keycloakclient "github.com/Slava02/ChatSupport/internal/clients/keycloak"
 	"github.com/Slava02/ChatSupport/internal/config"
 	"github.com/Slava02/ChatSupport/internal/logger"
+	chatrepo "github.com/Slava02/ChatSupport/internal/repositories/chats"
 	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
+	problemrepo "github.com/Slava02/ChatSupport/internal/repositories/problems"
 	"github.com/Slava02/ChatSupport/internal/server-client/errhandler"
 	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
@@ -87,6 +89,16 @@ func run() (errReturned error) {
 		return fmt.Errorf("messages repo: %v", err)
 	}
 
+	chatRepo, err := chatrepo.New(chatrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("chat repo: %v", err)
+	}
+
+	problemRepo, err := problemrepo.New(problemrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("problem repo: %v", err)
+	}
+
 	// Clients.
 	kc, err := keycloakclient.New(keycloakclient.NewOptions(
 		cfg.Clients.Keycloak.BasePath,
@@ -121,11 +133,14 @@ func run() (errReturned error) {
 		cfg.Servers.Client.Addr,
 		cfg.Servers.Client.AllowOrigins,
 		clientV1Swagger,
+		*chatRepo,
 		*msgRepo,
+		*problemRepo,
 		kc,
 		cfg.Servers.Client.RequiredAccess.Resource,
 		cfg.Servers.Client.RequiredAccess.Role,
 		errHandler.Handle,
+		db,
 	)
 	if err != nil {
 		return fmt.Errorf("init client server: %v", err)

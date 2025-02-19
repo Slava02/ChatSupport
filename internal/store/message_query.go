@@ -129,8 +129,8 @@ func (mq *MessageQuery) FirstX(ctx context.Context) *Message {
 	return node
 }
 
-// FirstID returns the first Message ID from the query.
-// Returns a *NotFoundError when no Message ID was found.
+// FirstID returns the first Message MessageID from the query.
+// Returns a *NotFoundError when no Message MessageID was found.
 func (mq *MessageQuery) FirstID(ctx context.Context) (id types.MessageID, err error) {
 	var ids []types.MessageID
 	if ids, err = mq.Limit(1).IDs(setContextOp(ctx, mq.ctx, ent.OpQueryFirstID)); err != nil {
@@ -179,8 +179,8 @@ func (mq *MessageQuery) OnlyX(ctx context.Context) *Message {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Message ID in the query.
-// Returns a *NotSingularError when more than one Message ID is found.
+// OnlyID is like Only, but returns the only Message MessageID in the query.
+// Returns a *NotSingularError when more than one Message MessageID is found.
 // Returns a *NotFoundError when no entities are found.
 func (mq *MessageQuery) OnlyID(ctx context.Context) (id types.MessageID, err error) {
 	var ids []types.MessageID

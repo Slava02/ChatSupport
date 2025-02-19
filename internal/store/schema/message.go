@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -22,13 +24,14 @@ func (Message) Fields() []ent.Field {
 		field.UUID("chat_id", types.ChatID{}),
 		field.UUID("problem_id", types.ProblemID{}),
 		field.UUID("author_id", types.UserID{}).Optional().Immutable(),
-		field.Bool("is_visible_for_client").Default(false),
+		field.Bool("is_visible_for_client").Default(true),
 		field.Bool("is_visible_for_manager").Default(false),
 		field.Text("body").NotEmpty().MaxLen(messageBodyMaxLength).Immutable(),
 		field.Time("checked_at").Optional(),
 		field.Bool("is_blocked").Default(false),
 		field.Bool("is_service").Default(false).Immutable(),
-		newCreatedAtField(),
+		field.UUID("initial_request_id", types.RequestID{}).Unique().Immutable(),
+		field.Time("created_at").Default(time.Now).Immutable(),
 	}
 }
 

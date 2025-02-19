@@ -1,3 +1,4 @@
+# https://taskfile.dev
 version: '3'
 
 silent: true
@@ -18,6 +19,7 @@ vars:
     entgo.io/ent/cmd/ent@v0.14.0
     github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1
     go.uber.org/mock/mockgen@v0.5.0
+    github.com/onsi/ginkgo/v2/ginkgo@v2.9.1
 
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yml
@@ -34,6 +36,9 @@ vars:
   CLIENT_V1_SRC: ./api/client.v1.swagger.yml
   CLIENT_V1_DST: ./internal/server-client/v1/server.gen.go
   CLIENT_V1_PKG: clientv1
+
+  E2E_CLIENT_V1_DST: ./tests/e2e/api/client/v1/client.gen.go
+  E2E_CLIENT_V1_PKG: apiclientv1
 
   TYPES: |
     ChatID
@@ -103,6 +108,21 @@ tasks:
       - echo "- Integration tests"
       - go test -tags integration -count 1 -race ./...
 
+  tests:e2e:
+    env:
+      E2E_CLIENT_V1_API_ENDPOINT: http://localhost:8080/v1
+
+      E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
+      E2E_KEYCLOAK_REALM: Bank
+      E2E_KEYCLOAK_CLIENT_ID: e2e-testing
+      E2E_KEYCLOAK_CLIENT_SECRET: fQT4AJotBQI23wP7vH5Yii4UTymlSSyp
+      E2E_KEYCLOAK_CLIENT_DEBUG: false
+      E2E_KEYCLOAK_CLIENTS: e2e_client_0,e2e_client_1     # <- FIXME
+    cmds:
+      - echo "- End-to-end tests..."
+      # NOTE: It's important to run tests serial (without `-p` flag) – for correct `clientsPool` sharing.
+      - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"
+
   build:
     cmds:
       - echo "- Build"
@@ -122,6 +142,7 @@ tasks:
     - task: gen:types
     - task: ent:gen
     - task: gen:api
+    - task: gen:e2e
 
   ent:new:
     cmds:
@@ -130,7 +151,7 @@ tasks:
 
   ent:gen:
     cmds:
-      - ent generate {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
+      - ent generate --feature sql/upsert  {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
       - task: tidy
 
   ent:atlas:
@@ -151,6 +172,11 @@ tasks:
       - echo "Generate client server..."
       - oapi-codegen --old-config-style -generate types,server,spec -package {{.CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.CLIENT_V1_DST}}
       - task: tidy
+
+  gen:e2e:
+    cmds:
+      - echo "[E2E] Generate client API..."
+      - oapi-codegen --old-config-style -generate types,client -package {{.E2E_CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.E2E_CLIENT_V1_DST}}
 
   deps:
     cmds:
