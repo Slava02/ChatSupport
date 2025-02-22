@@ -3,8 +3,14 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
+)
+
+const (
+	defaultCode    = http.StatusInternalServerError
+	defaultMessage = "something went wrong"
 )
 
 // ServerError is used to return custom error codes to client.
@@ -38,15 +44,13 @@ func GetServerErrorCode(err error) int {
 // ProcessServerError tries to retrieve from given error it's code, message and some details.
 // For example, that fields can be used to build error response for client.
 func ProcessServerError(err error) (code int, msg string, details string) {
-	var serverErr *ServerError
-	if errors.As(err, &serverErr) {
-		return serverErr.Code, serverErr.Message, serverErr.Error()
+	if errSrv := new(ServerError); errors.As(err, &errSrv) {
+		return errSrv.Code, errSrv.Message, errSrv.Error()
 	}
 
-	var httpErr *echo.HTTPError
-	if errors.As(err, &httpErr) {
-		return httpErr.Code, httpErr.Message.(string), httpErr.Error()
+	if errHTTPEcho := new(echo.HTTPError); errors.As(err, &errHTTPEcho) {
+		return errHTTPEcho.Code, fmt.Sprintf("%s", errHTTPEcho.Message), errHTTPEcho.Error()
 	}
 
-	return 500, "something went wrong", err.Error()
+	return defaultCode, defaultMessage, err.Error()
 }

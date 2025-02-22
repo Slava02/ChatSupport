@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
 
-	"github.com/Slava02/ChatSupport/internal/errors"
+	internalerrors "github.com/Slava02/ChatSupport/internal/errors"
 )
 
 // NewLogging returns a middleware that logs incoming requests with specific details.
@@ -37,7 +37,12 @@ func NewLogging(lg *zap.Logger) echo.MiddlewareFunc {
 			uid, _ := userID(eCtx)
 			lg = lg.With(zap.Stringer("user_id", uid))
 
-			status := errors.GetServerErrorCode(v.Error)
+			status := v.Status
+
+			if err := v.Error; err != nil {
+				lg = lg.With(zap.Error(err))
+				status = internalerrors.GetServerErrorCode(err)
+			}
 
 			if err := v.Error; err != nil {
 				lg = lg.With(zap.Error(err))

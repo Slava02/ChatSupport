@@ -12,7 +12,7 @@ type Response struct {
 var ResponseBuilder = func(code int, msg string, details string) any {
 	return Response{
 		clientv1.Error{
-			Code:    clientv1.ErrorCode(code), //nolint:unconvert // unified types
+			Code:    clientv1.ErrorCode(code),
 			Message: msg,
 			Details: pointer.PtrWithZeroAsNil(details),
 		},

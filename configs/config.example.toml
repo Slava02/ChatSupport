@@ -38,7 +38,7 @@ use = "psql" # "sqlite", "psql"
 [stores.sqlite]
 # No conf.
 [stores.psql]
-address = "127.0.0.1:5432"
+addr = "127.0.0.1:5432"
 username = "chat-service"
 password = "chat-service"
 database = "chat-service"

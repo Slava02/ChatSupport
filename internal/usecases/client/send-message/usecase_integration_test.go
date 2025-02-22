@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	chatsrepo "github.com/Slava02/ChatSupport/internal/repositories/chats"
 	messagesrepo "github.com/Slava02/ChatSupport/internal/repositories/messages"
