@@ -119,7 +119,6 @@ func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
 func newChatStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -127,7 +126,6 @@ func newChatStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ChatTable, ChatColumn),
 	)
 }
-
 func newMessagesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),

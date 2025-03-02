@@ -46,6 +46,8 @@ vars:
     ProblemID
     RequestID
     UserID
+    JobID
+    FailedJobID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
 
@@ -151,7 +153,7 @@ tasks:
 
   ent:gen:
     cmds:
-      - ent generate --feature sql/upsert  {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
+      - ent generate --feature sql/upsert  --feature sql/execquery {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
       - task: tidy
 
   ent:atlas:
@@ -165,7 +167,7 @@ tasks:
   gen:types:
     cmds:
       - echo "Generate types..."
-      - go run ./cmd/gen-types types ChatID,MessageID,ProblemID,RequestID,UserID ./internal/types/types.gen.go
+      - go run ./cmd/gen-types {{.TYPES_PKG}} {{ .TYPES | trim | splitLines | join "," }} {{.TYPES_DST}}
 
   gen:api:
     cmds:
