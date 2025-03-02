@@ -9,7 +9,7 @@ import (
 )
 
 type TypeSet = interface {
-	ChatID | MessageID | ProblemID | RequestID | UserID
+	ChatID | MessageID | ProblemID | RequestID | UserID | JobID | FailedJobID
 }
 
 func Parse[T TypeSet](s string) (T, error) {
@@ -320,6 +320,128 @@ func (t *UserID) Matches(x interface{}) bool {
 }
 
 func (t UserID) AsPointer() *UserID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// JobID type
+
+type JobID uuid.UUID
+
+func NewJobID() JobID {
+	return JobID(uuid.New())
+}
+
+var JobIDNil = JobID(uuid.Nil)
+
+func (t JobID) String() string {
+	return uuid.UUID(t).String()
+}
+
+func (t JobID) Value() (driver.Value, error) {
+	return t.String(), nil
+}
+
+func (t *JobID) Scan(src any) error {
+	return (*uuid.UUID)(t).Scan(src)
+}
+
+func (t JobID) MarshalText() (text []byte, err error) {
+	return uuid.UUID(t).MarshalText()
+}
+
+func (t *JobID) UnmarshalText(text []byte) error {
+	id, err := uuid.ParseBytes(text)
+	if err != nil {
+		return err
+	}
+	*t = JobID(id)
+	return nil
+}
+
+func (t JobID) IsZero() bool {
+	return t == JobIDNil
+}
+
+func (t JobID) Validate() error {
+	if t.IsZero() {
+		return errors.New("zero JobID")
+	}
+	return nil
+}
+
+func (t *JobID) Matches(x interface{}) bool {
+	other, ok := x.(JobID)
+	if !ok {
+		return false
+	}
+	return *t == other
+}
+
+func (t JobID) AsPointer() *JobID {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// FailedJobID type
+
+type FailedJobID uuid.UUID
+
+func NewFailedJobID() FailedJobID {
+	return FailedJobID(uuid.New())
+}
+
+var FailedJobIDNil = FailedJobID(uuid.Nil)
+
+func (t FailedJobID) String() string {
+	return uuid.UUID(t).String()
+}
+
+func (t FailedJobID) Value() (driver.Value, error) {
+	return t.String(), nil
+}
+
+func (t *FailedJobID) Scan(src any) error {
+	return (*uuid.UUID)(t).Scan(src)
+}
+
+func (t FailedJobID) MarshalText() (text []byte, err error) {
+	return uuid.UUID(t).MarshalText()
+}
+
+func (t *FailedJobID) UnmarshalText(text []byte) error {
+	id, err := uuid.ParseBytes(text)
+	if err != nil {
+		return err
+	}
+	*t = FailedJobID(id)
+	return nil
+}
+
+func (t FailedJobID) IsZero() bool {
+	return t == FailedJobIDNil
+}
+
+func (t FailedJobID) Validate() error {
+	if t.IsZero() {
+		return errors.New("zero FailedJobID")
+	}
+	return nil
+}
+
+func (t *FailedJobID) Matches(x interface{}) bool {
+	other, ok := x.(FailedJobID)
+	if !ok {
+		return false
+	}
+	return *t == other
+}
+
+func (t FailedJobID) AsPointer() *FailedJobID {
 	if t.IsZero() {
 		return nil
 	}

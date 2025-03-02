@@ -130,8 +130,8 @@ func (cq *ChatQuery) FirstX(ctx context.Context) *Chat {
 	return node
 }
 
-// FirstID returns the first Chat MessageID from the query.
-// Returns a *NotFoundError when no Chat MessageID was found.
+// FirstID returns the first Chat ID from the query.
+// Returns a *NotFoundError when no Chat ID was found.
 func (cq *ChatQuery) FirstID(ctx context.Context) (id types.ChatID, err error) {
 	var ids []types.ChatID
 	if ids, err = cq.Limit(1).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryFirstID)); err != nil {
@@ -180,8 +180,8 @@ func (cq *ChatQuery) OnlyX(ctx context.Context) *Chat {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Chat MessageID in the query.
-// Returns a *NotSingularError when more than one Chat MessageID is found.
+// OnlyID is like Only, but returns the only Chat ID in the query.
+// Returns a *NotSingularError when more than one Chat ID is found.
 // Returns a *NotFoundError when no entities are found.
 func (cq *ChatQuery) OnlyID(ctx context.Context) (id types.ChatID, err error) {
 	var ids []types.ChatID
@@ -478,7 +478,6 @@ func (cq *ChatQuery) loadMessages(ctx context.Context, query *MessageQuery, node
 	}
 	return nil
 }
-
 func (cq *ChatQuery) loadProblems(ctx context.Context, query *ProblemQuery, nodes []*Chat, init func(*Chat), assign func(*Chat, *Problem)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[types.ChatID]*Chat)

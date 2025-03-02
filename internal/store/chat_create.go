@@ -353,9 +353,9 @@ func (u *ChatUpsertOne) ExecX(ctx context.Context) {
 // Exec executes the UPSERT query and returns the inserted/updated ID.
 func (u *ChatUpsertOne) ID(ctx context.Context) (id types.ChatID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric MessageID
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("store: ChatUpsertOne.MessageID is not supported by MySQL driver. Use ChatUpsertOne.Exec instead")
+		return id, errors.New("store: ChatUpsertOne.ID is not supported by MySQL driver. Use ChatUpsertOne.Exec instead")
 	}
 	node, err := u.create.Save(ctx)
 	if err != nil {
