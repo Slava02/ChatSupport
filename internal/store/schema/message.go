@@ -24,12 +24,13 @@ func (Message) Fields() []ent.Field {
 		field.UUID("chat_id", types.ChatID{}),
 		field.UUID("problem_id", types.ProblemID{}),
 		field.UUID("author_id", types.UserID{}).Optional().Immutable(),
-		field.Bool("is_visible_for_client").Default(false),
+		field.Bool("is_visible_for_client").Default(true),
 		field.Bool("is_visible_for_manager").Default(false),
 		field.Text("body").NotEmpty().MaxLen(messageBodyMaxLength).Immutable(),
 		field.Time("checked_at").Optional(),
 		field.Bool("is_blocked").Default(false),
 		field.Bool("is_service").Default(false).Immutable(),
+		field.UUID("initial_request_id", types.RequestID{}).Unique().Immutable(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
 }
@@ -37,11 +38,13 @@ func (Message) Fields() []ent.Field {
 // Edges of the Message.
 func (Message) Edges() []ent.Edge {
 	return []ent.Edge{
+		// The message has one chat.
 		edge.From("chat", Chat.Type).
 			Ref("messages").
 			Field("chat_id").
 			Required().Unique(),
 
+		// The message has one problem.
 		edge.From("problem", Problem.Type).
 			Ref("messages").
 			Field("problem_id").

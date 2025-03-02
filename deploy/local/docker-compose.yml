@@ -3,9 +3,9 @@ services:
     image: postgres:14-alpine
     container_name: postgres
     environment:
-      POSTGRES_DB: sentry
-      POSTGRES_USER: sentry
-      POSTGRES_PASSWORD: sentry
+      POSTGRES_DB: chat-service
+      POSTGRES_USER: chat-service
+      POSTGRES_PASSWORD: chat-service
       PGDATA: /var/lib/postgresql/data
     volumes:
       - postgresql-data:/var/lib/postgresql

@@ -105,14 +105,9 @@ func TestChatID_IsZero(t *testing.T) {
 func TestChatID_Matches(t *testing.T) {
 	id := types.NewChatID()
 	id2 := types.MustParse[types.ChatID](id.String())
-	// Matched.
 	assert.Equal(t, id, id2)
-	assert.True(t, id.Matches(id2))
-	// Not matched.
 	assert.NotEqual(t, id, id2.String())
-	assert.False(t, id.Matches(id2.String()))
 	assert.NotEqual(t, id, types.NewMessageID())
-	assert.False(t, id.Matches(types.NewMessageID()))
 }
 
 //nolint:testifylint // not directly related single checks

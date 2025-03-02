@@ -21,8 +21,6 @@ const (
 	FieldManagerID = "manager_id"
 	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
 	FieldResolvedAt = "resolved_at"
-	// FieldResolveRequestID holds the string denoting the resolve_request_id field in the database.
-	FieldResolveRequestID = "resolve_request_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeChat holds the string denoting the chat edge name in mutations.
@@ -53,7 +51,6 @@ var Columns = []string{
 	FieldChatID,
 	FieldManagerID,
 	FieldResolvedAt,
-	FieldResolveRequestID,
 	FieldCreatedAt,
 }
 
@@ -97,11 +94,6 @@ func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
 }
 
-// ByResolveRequestID orders the results by the resolve_request_id field.
-func ByResolveRequestID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResolveRequestID, opts...).ToFunc()
-}
-
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -127,7 +119,6 @@ func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
 func newChatStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -135,7 +126,6 @@ func newChatStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ChatTable, ChatColumn),
 	)
 }
-
 func newMessagesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),

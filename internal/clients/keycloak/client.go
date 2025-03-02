@@ -8,20 +8,21 @@ import (
 
 //go:generate options-gen -out-filename=client_options.gen.go -from-struct=Options
 type Options struct {
-	basePath             string `option:"mandatory" validate:"required,url"`
-	keyCloakRealm        string `option:"mandatory" validate:"required"`
-	keyCloakClientID     string `option:"mandatory" validate:"required"`
-	keyCloakClientSecret string `option:"mandatory" validate:"required"`
-	debugMode            bool   `validate:"omitempty"`
+	basePath     string `option:"mandatory" validate:"required,url"`
+	realm        string `option:"mandatory" validate:"required"`
+	clientID     string `option:"mandatory" validate:"required"`
+	clientSecret string `option:"mandatory" validate:"required"`
+	debugMode    bool
 }
 
-// Client is a tiny client to the KeyCloak realm operations. UMA configuration:
+// Client is a tiny client to the Keycloak realm operations. UMA configuration:
 // http://localhost:3010/realms/Bank/.well-known/uma2-configuration
 type Client struct {
-	keyCloakRealm        string `validate:"required"`
-	keyCloakClientID     string `validate:"required"`
-	keyCloakClientSecret string `validate:"required"`
-	cli                  *resty.Client
+	realm        string
+	clientID     string
+	clientSecret string
+
+	cli *resty.Client
 }
 
 func New(opts Options) (*Client, error) {
@@ -34,9 +35,9 @@ func New(opts Options) (*Client, error) {
 	cli.SetBaseURL(opts.basePath)
 
 	return &Client{
-		keyCloakRealm:        opts.keyCloakRealm,
-		keyCloakClientID:     opts.keyCloakClientID,
-		keyCloakClientSecret: opts.keyCloakClientSecret,
-		cli:                  cli,
+		realm:        opts.realm,
+		clientID:     opts.clientID,
+		clientSecret: opts.clientSecret,
+		cli:          cli,
 	}, nil
 }

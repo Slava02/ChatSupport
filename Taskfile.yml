@@ -1,3 +1,4 @@
+# https://taskfile.dev
 version: '3'
 
 silent: true
@@ -18,6 +19,7 @@ vars:
     entgo.io/ent/cmd/ent@v0.14.0
     github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1
     go.uber.org/mock/mockgen@v0.5.0
+    github.com/onsi/ginkgo/v2/ginkgo@v2.9.1
 
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yml
@@ -26,13 +28,26 @@ vars:
 
   DOCKER_COMPOSE_CMD: docker compose -f {{ .DOCKER_COMPOSE_PATHS | trim | splitLines | join " -f " }}
 
+  ENT_SCHEMA: ./internal/store/schema
+  ENT_TEMPLATE: ./internal/store/templates
+
   KEYCLOAK_REALM_PATH: ./deploy/local/bank-realm.json
+
+  CLIENT_V1_SRC: ./api/client.v1.swagger.yml
+  CLIENT_V1_DST: ./internal/server-client/v1/server.gen.go
+  CLIENT_V1_PKG: clientv1
+
+  E2E_CLIENT_V1_DST: ./tests/e2e/api/client/v1/client.gen.go
+  E2E_CLIENT_V1_PKG: apiclientv1
 
   TYPES: |
     ChatID
     MessageID
     ProblemID
+    RequestID
     UserID
+    JobID
+    FailedJobID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
 
@@ -82,15 +97,33 @@ tasks:
 
   tests:integration:
     env:
-      TEST_LOG_LEVEL: info
-      TEST_KEYCLOAK_REALM: Bank
-      TEST_KEYCLOAK_CLIENT_ID: integration-testing
-      TEST_KEYCLOAK_CLIENT_SECRET: d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49
-      TEST_KEYCLOAK_TEST_USER: integration-testing
-      TEST_KEYCLOAK_TEST_PASSWORD: integration-testing
+      LOG_LEVEL: info
+      KEYCLOAK_REALM: Bank
+      KEYCLOAK_CLIENT_ID: integration-testing
+      KEYCLOAK_CLIENT_SECRET: d1Z7wY9JfveYnOW3cdMqYJ2s4ChJ0u49
+      KEYCLOAK_TEST_USER: integration-testing
+      KEYCLOAK_TEST_PASSWORD: integration-testing
+
+      PSQL_USER: chat-service
+      PSQL_PASSWORD: chat-service
     cmds:
       - echo "- Integration tests"
       - go test -tags integration -count 1 -race ./...
+
+  tests:e2e:
+    env:
+      E2E_CLIENT_V1_API_ENDPOINT: http://localhost:8080/v1
+
+      E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
+      E2E_KEYCLOAK_REALM: Bank
+      E2E_KEYCLOAK_CLIENT_ID: e2e-testing
+      E2E_KEYCLOAK_CLIENT_SECRET: fQT4AJotBQI23wP7vH5Yii4UTymlSSyp
+      E2E_KEYCLOAK_CLIENT_DEBUG: false
+      E2E_KEYCLOAK_CLIENTS: e2e_client_0,e2e_client_1     # <- FIXME
+    cmds:
+      - echo "- End-to-end tests..."
+      # NOTE: It's important to run tests serial (without `-p` flag) – for correct `clientsPool` sharing.
+      - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"
 
   build:
     cmds:
@@ -111,38 +144,41 @@ tasks:
     - task: gen:types
     - task: ent:gen
     - task: gen:api
+    - task: gen:e2e
 
   ent:new:
     cmds:
-      - ent new --target ./internal/store/schema {{.CLI_ARGS}}
+      - ent new --target {{.ENT_SCHEMA}} {{.CLI_ARGS}}
       - task: tidy
 
   ent:gen:
     cmds:
-      - ent generate ./internal/store/schema
+      - ent generate --feature sql/upsert  --feature sql/execquery {{.ENT_SCHEMA}} --template {{.ENT_TEMPLATE}}
       - task: tidy
 
   ent:atlas:
     cmds:
       - |
         atlas schema inspect \
-        -u "ent://internal/store/schema" \
+        -u "ent://{{.ENT_SCHEMA}}" \
         --dev-url "sqlite://file?mode=memory&_fk=1" \
         -w
 
   gen:types:
     cmds:
       - echo "Generate types..."
-      - go run ./cmd/gen-types types ChatID,MessageID,ProblemID,RequestID,UserID ./internal/types/types.gen.go
+      - go run ./cmd/gen-types {{.TYPES_PKG}} {{ .TYPES | trim | splitLines | join "," }} {{.TYPES_DST}}
 
   gen:api:
     cmds:
-      - task: gen:client
-
-  gen:client:
-    cmds:
       - echo "Generate client server..."
-      - oapi-codegen -old-config-style -generate skip-prune,types,server,spec -package clientv1 api/client.v1.swagger.yml > internal/server-client/v1/server.gen.go
+      - oapi-codegen --old-config-style -generate types,server,spec -package {{.CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.CLIENT_V1_DST}}
+      - task: tidy
+
+  gen:e2e:
+    cmds:
+      - echo "[E2E] Generate client API..."
+      - oapi-codegen --old-config-style -generate types,client -package {{.E2E_CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.E2E_CLIENT_V1_DST}}
 
   deps:
     cmds:
@@ -197,8 +233,10 @@ tasks:
       - "{{.DOCKER_COMPOSE_CMD}} up -d {{.SERVICE}}"
 
   kc:export:
-    # https://www.keycloak.org/server/importExport
     cmds:
+      - # https://www.keycloak.org/server/importExport
+      - echo "Dump Keycloak Bank realm..."
       - cmd: docker exec -it local-keycloak-1 /opt/keycloak/bin/kc.sh export --users realm_file --file /tmp/bank-realm.json --realm Bank
         ignore_error: true
       - docker cp local-keycloak-1:/tmp/bank-realm.json {{.KEYCLOAK_REALM_PATH}}
+      - echo "Exported in {{.KEYCLOAK_REALM_PATH}}"

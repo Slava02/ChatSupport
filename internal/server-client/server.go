@@ -35,6 +35,7 @@ type Options struct {
 	keycloak     *keycloakclient.Client   `option:"mandatory" validate:"required"`
 	resource     string                   `option:"mandatory" validate:"required"`
 	role         string                   `option:"mandatory" validate:"required"`
+	errorHandler echo.HTTPErrorHandler    `option:"mandatory" validate:"required"`
 }
 
 type Server struct {

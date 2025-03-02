@@ -89,6 +89,13 @@ func MustParse[T TypeSet](s string) T {
 		}
 		return *t == other
 	}
+
+	func (t {{ . }}) AsPointer() *{{ . }} {
+		if t.IsZero() {
+			return nil
+		}
+		return &t
+	}
 {{- end }}
 `))
 

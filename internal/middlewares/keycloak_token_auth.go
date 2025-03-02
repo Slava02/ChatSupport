@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -30,43 +29,31 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 		KeyLookup:  "header:" + echo.HeaderAuthorization,
 		AuthScheme: "Bearer",
 		Validator: func(tokenStr string, eCtx echo.Context) (bool, error) {
-			tokenStr = sanitize(tokenStr)
-
-			token, err := introspector.IntrospectToken(eCtx.Request().Context(), tokenStr)
+			res, err := introspector.IntrospectToken(eCtx.Request().Context(), tokenStr)
 			if err != nil {
 				return false, err
 			}
-
-			if !token.Active {
+			if !res.Active {
 				return false, nil
 			}
 
 			var cl claims
 			t, _, err := new(jwt.Parser).ParseUnverified(tokenStr, &cl)
 			if err != nil {
+				// Unreachable.
 				return false, err
 			}
-
-			if err = cl.Valid(); err != nil {
+			if err := t.Claims.Valid(); err != nil {
 				return false, err
 			}
-
-			if !cl.ResourceAccess.HasResourceRole(resource, role) {
+			if !cl.ResourcesAccess.HasResourceRole(resource, role) {
 				return false, echo.ErrForbidden.WithInternal(ErrNoRequiredResourceRole)
 			}
 
 			eCtx.Set(tokenCtxKey, t)
-
 			return true, nil
 		},
 	})
-}
-
-func sanitize(t string) string {
-	for _, ch := range []string{" ", ","} {
-		t = strings.ReplaceAll(t, ch, "")
-	}
-	return t
 }
 
 func MustUserID(eCtx echo.Context) types.UserID {

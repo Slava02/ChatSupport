@@ -476,7 +476,6 @@ func (pq *ProblemQuery) loadChat(ctx context.Context, query *ChatQuery, nodes []
 	}
 	return nil
 }
-
 func (pq *ProblemQuery) loadMessages(ctx context.Context, query *MessageQuery, nodes []*Problem, init func(*Problem), assign func(*Problem, *Message)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[types.ProblemID]*Problem)

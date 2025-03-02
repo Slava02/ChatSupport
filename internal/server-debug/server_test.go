@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Slava02/ChatSupport/internal/logger"
+	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
 	serverdebug "github.com/Slava02/ChatSupport/internal/server-debug"
 )
 
@@ -23,7 +24,10 @@ func TestServer_LoggerLevel(t *testing.T) {
 	err := logger.Init(logger.NewOptions("debug"))
 	require.NoError(t, err)
 
-	srv, err := serverdebug.New(serverdebug.NewOptions(":80"))
+	clientV1Swagger, err := clientv1.GetSwagger()
+	require.NoError(t, err)
+
+	srv, err := serverdebug.New(serverdebug.NewOptions(":80", clientV1Swagger))
 	require.NoError(t, err)
 
 	testSrv := httptest.NewServer(srv.Handler())

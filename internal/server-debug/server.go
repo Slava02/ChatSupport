@@ -2,13 +2,13 @@ package serverdebug
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"time"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
@@ -16,7 +16,7 @@ import (
 
 	"github.com/Slava02/ChatSupport/internal/buildinfo"
 	"github.com/Slava02/ChatSupport/internal/logger"
-	clientv1 "github.com/Slava02/ChatSupport/internal/server-client/v1"
+	"github.com/Slava02/ChatSupport/internal/middlewares"
 )
 
 const (
@@ -27,6 +27,8 @@ const (
 //go:generate options-gen -out-filename=server_options.gen.go -from-struct=Options
 type Options struct {
 	addr string `option:"mandatory" validate:"required,hostname_port"`
+
+	clientSwagger *openapi3.T `option:"mandatory" validate:"required"`
 }
 
 type Server struct {
@@ -42,7 +44,10 @@ func New(opts Options) (*Server, error) {
 	lg := zap.L().Named("server-debug")
 
 	e := echo.New()
-	e.Use(middleware.Recover())
+	e.Use(
+		middleware.Recover(),
+		middlewares.NewLogging(lg),
+	)
 
 	s := &Server{
 		lg: lg,
@@ -57,8 +62,8 @@ func New(opts Options) (*Server, error) {
 	e.GET("/version", s.Version)
 	index.addPage("/version", "Get build information")
 
-	e.PUT("/log/level", s.ChangeLogLevel)
-	e.GET("/log/level", s.GetLogLevel)
+	e.PUT("/log/level", echo.WrapHandler(logger.Level))
+	e.GET("/log/level", echo.WrapHandler(logger.Level))
 
 	{
 		pprofMux := http.NewServeMux()
@@ -67,23 +72,19 @@ func New(opts Options) (*Server, error) {
 		pprofMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 		pprofMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 		pprofMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-		pprofMux.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
-		pprofMux.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
-		pprofMux.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
-		pprofMux.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
-		pprofMux.HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
-		pprofMux.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
 		e.GET("/debug/pprof/*", echo.WrapHandler(pprofMux))
 		index.addPage("/debug/pprof/", "Go std profiler")
 		index.addPage("/debug/pprof/profile?seconds=30", "Take half-min profile")
 	}
 
-	e.GET("/schema/client", s.GetSchema)
-	index.addPage("/schema/client", "Get client OpenAPI specification")
+	e.GET("/debug/error", s.DebugError)
+	index.addPage("/debug/error", "Debug Sentry error event")
 
-	e.GET("/debug/error", s.SendError)
-	index.addPage("/debug/error", "Debug sentry error event")
+	{
+		e.GET("/schema/client", s.ExposeSchema(opts.clientSwagger))
+		index.addPage("/schema/client", "Get client OpenAPI specification")
+	}
 
 	e.GET("/", index.handler)
 	return s, nil
@@ -113,50 +114,17 @@ func (s *Server) Run(ctx context.Context) error {
 	return eg.Wait()
 }
 
-func (s *Server) Version(ctx echo.Context) error {
-	info, err := json.Marshal(buildinfo.BuildInfo)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "couldn't marshal buildinfo")
-	}
-
-	_, err = ctx.Response().Write(info)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "couldn't write buildinfo to response")
-	}
-
-	return ctx.String(http.StatusOK, "completed")
+func (s *Server) Version(eCtx echo.Context) error {
+	return eCtx.JSON(http.StatusOK, buildinfo.BuildInfo)
 }
 
-func (s *Server) ChangeLogLevel(ctx echo.Context) error {
-	level := ctx.FormValue("level")
-	if level == "" {
-		return ctx.String(http.StatusBadRequest, "level is required")
-	}
-
-	if err := logger.LogLevel.UnmarshalText([]byte(level)); err != nil {
-		return ctx.String(http.StatusBadRequest, "parse log level")
-	}
-
-	logger.LogLevel.SetLevel(logger.LogLevel.Level())
-
-	return ctx.String(http.StatusOK, "log level updated")
+func (s *Server) DebugError(eCtx echo.Context) error {
+	s.lg.Error("look for me in the Sentry")
+	return eCtx.String(http.StatusOK, "event sent")
 }
 
-func (s *Server) GetLogLevel(ctx echo.Context) error {
-	level := logger.LogLevel.String()
-	return ctx.JSONPretty(http.StatusOK, map[string]string{"level": level}, " ")
-}
-
-func (s *Server) SendError(ctx echo.Context) error {
-	s.lg.Error("look for me in sentry")
-	return ctx.String(http.StatusOK, "event sent")
-}
-
-func (s *Server) GetSchema(ctx echo.Context) error {
-	swagger, err := clientv1.GetSwagger()
-	if err != nil {
-		return errors.New("couldn't get swagger")
+func (s *Server) ExposeSchema(swagger *openapi3.T) echo.HandlerFunc {
+	return func(eCtx echo.Context) error {
+		return eCtx.JSON(http.StatusOK, swagger)
 	}
-
-	return ctx.JSONPretty(http.StatusOK, swagger, " ")
 }

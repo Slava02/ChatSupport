@@ -27,6 +27,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetHistoryResponse"
 
+  /sendMessage:
+    post:
+      description: Send new message to the chat.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        '200':
+          description: Message created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageResponse"
+
 security:
   - bearerAuth: [ ]
 
@@ -42,16 +61,70 @@ components:
       in: header
       name: X-Request-ID
       schema:
-        # https://github.com/oapi-codegen/oapi-codegen?tab=readme-ov-file#openapi-extensions
         type: string
         format: uuid
         x-go-type: types.RequestID
-        x-go-type-import:
+        x-go-import:
           path: "github.com/Slava02/ChatSupport/internal/types"
       required: true
-      example: "151d6a6c-c716-43ab-93ff-bbd78d299027"
 
   schemas:
+    # Common.
+    Error:
+      required: [ message, code ]
+      properties:
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+        details:
+          type: string
+
+    ErrorCode:
+      type: integer
+      description: contains HTTP error codes and specific business logic error codes (the last must be >= 1000).
+      enum:
+        - 1000
+        - 1001
+      x-enum-varnames:
+        - ErrorCodeCreateChatError
+        - ErrorCodeCreateProblemError
+      minimum: 400
+
+    SendMessageRequest:
+      required: [ messageBody ]
+      properties:
+        messageBody:
+          type: string
+          minLength: 1
+          maxLength: 3000
+
+    SendMessageResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/MessageHeader"
+        error:
+          $ref: "#/components/schemas/Error"
+
+    MessageHeader:
+      required: [ id, createdAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Slava02/ChatSupport/internal/types"
+        authorId:
+          type: string
+          format: uuid
+          x-go-type: types.UserID
+          x-go-type-import:
+            path: "github.com/Slava02/ChatSupport/internal/types"
+        createdAt:
+          type: string
+          format: date-time
+
     # /getHistory
 
     GetHistoryRequest:
@@ -68,17 +141,21 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/MessagesPage"
+        error:
+          $ref: "#/components/schemas/Error"
 
     MessagesPage:
-      required: [ messages ]
+      required: [ next, messages ]
       properties:
         messages:
           type: array
           items:
             $ref: "#/components/schemas/Message"
+        next:
+          type: string
 
     Message:
-      required: [ id, authorId, body, createdAt ]
+      required: [ id, body, createdAt, isReceived, isBlocked, isService ]
       properties:
         id:
           type: string
@@ -97,3 +174,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        isReceived:
+          type: boolean
+        isBlocked:
+          type: boolean
+        isService:
+          type: boolean
